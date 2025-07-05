@@ -1,0 +1,10 @@
+# Ignore everything
+*
+# Unignore what we want to track
+!index.html
+!api/
+!api/submit.js
+!vercel.json
+!package.json
+!.gitignore
+!README.md

@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACC Shark Tank - Registration</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideIn 0.8s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+
+        .form-container {
+            padding: 40px 30px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #003366;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .required::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 5px;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .ai-toggle-container {
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .ai-toggle {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background: #ccc;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .toggle-switch.active {
+            background: #003366;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            background: white;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .toggle-switch.active::after {
+            left: 32px;
+        }
+
+        .ai-assistant {
+            display: none;
+            background: white;
+            border: 2px solid #003366;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .ai-assistant.active {
+            display: block;
+            animation: expandIn 0.5s ease-out;
+        }
+
+        @keyframes expandIn {
+            from {
+                opacity: 0;
+                max-height: 0;
+            }
+            to {
+                opacity: 1;
+                max-height: 1000px;
+            }
+        }
+
+        .ai-question {
+            display: none;
+            margin-bottom: 20px;
+        }
+
+        .ai-question.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .ai-question h4 {
+            color: #003366;
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+
+        .ai-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: #003366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004080;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 51, 102, 0.3);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid #003366;
+            color: #003366;
+        }
+
+        .btn-outline:hover {
+            background: #003366;
+            color: white;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 30px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 51, 102, 0.3);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #003366;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .success-message.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .ai-suggestion {
+            background: #e8f4f8;
+            border: 2px solid #003366;
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .ai-suggestion.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        .ai-suggestion h4 {
+            color: #003366;
+            margin-bottom: 15px;
+        }
+
+        .ai-suggestion-text {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            min-height: 100px;
+            max-height: none;
+            overflow-y: auto;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 15px;
+            }
+            
+            .header {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .form-container {
+                padding: 30px 20px;
+            }
+            
+            .ai-buttons {
+                flex-direction: column;
+            }
+        }
+
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #003366;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box h3 {
+            color: #003366;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>ACC Shark Tank</h1>
+            <p>Turn Your Business Ideas Into Reality</p>
+        </div>
+
+        <div class="form-container">
+            <div class="info-box">
+                <h3>About the Event</h3>
+                <p>Join Austin Community College's premier entrepreneurship event! Present your idea, big or small, to go through a round of selection to move onto the next round and be invited to the pitch event. Selected participants will present to a panel of successful entrepreneurs and investors for feedback, mentorship, and potential funding opportunities.</p>
+            </div>
+
+            <form id="registrationForm">
+                <div class="form-group">
+                    <label for="fullName" class="required">Full Name</label>
+                    <input type="text" id="fullName" name="fullName" required>
+                    <div class="error" id="fullNameError">Please enter your full name</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="email" class="required">Email Address</label>
+                    <input type="email" id="email" name="email" required>
+                    <div class="error" id="emailError">Please enter a valid email address</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="major" class="required">Major/Field of Study</label>
+                    <select id="major" name="major" required>
+                        <option value="">Select your major</option>
+                        <option value="Business Administration">Business Administration</option>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Finance">Finance</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Graphic Design">Graphic Design</option>
+                        <option value="Health Sciences">Health Sciences</option>
+                        <option value="Liberal Arts">Liberal Arts</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <div class="error" id="majorError">Please select your major</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="businessName" class="required">Business Name/Idea</label>
+                    <input type="text" id="businessName" name="businessName" required>
+                    <div class="error" id="businessNameError">Please enter your business name or idea</div>
+                </div>
+
+                <div class="form-group">
+                    <label for="businessDescription" class="required">Business Description</label>
+                    
+                    <div class="ai-toggle-container">
+                        <div class="ai-toggle">
+                            <div class="toggle-switch" id="aiToggle"></div>
+                            <span><strong>Want us to help you format a submission?</strong></span>
+                        </div>
+                        <p style="color: #666; font-size: 0.9rem;">Get guided help to create a compelling business description for your Shark Tank submission.</p>
+                    </div>
+
+                    <div class="ai-assistant" id="aiAssistant">
+                        <h3 style="color: #003366; margin-bottom: 20px;">Submission Guide</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Answer these questions to build a strong business description that will impress our panel of investors.</p>
+                        
+                        <div class="ai-question active" id="question1">
+                            <h4>1. What's your business concept?</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Explain what your business does in 2-3 sentences. Think elevator pitch.</p>
+                            <textarea id="concept" placeholder="Example: We create affordable smart home devices that help seniors live independently by monitoring their daily activities and alerting family members if something seems wrong."></textarea>
+                            <div class="ai-buttons">
+                                <button type="button" class="btn btn-primary" onclick="nextQuestion(2)">Next</button>
+                            </div>
+                        </div>
+
+                        <div class="ai-question" id="question2">
+                            <h4>2. What problem are you solving?</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Describe the specific pain point or challenge your business addresses. Make it relatable.</p>
+                            <textarea id="problem" placeholder="Example: Many seniors want to age in place but their families worry about their safety. Current monitoring systems are expensive and invasive, creating a gap in affordable, dignified care solutions."></textarea>
+                            <div class="ai-buttons">
+                                <button type="button" class="btn btn-outline" onclick="nextQuestion(1)">Back</button>
+                                <button type="button" class="btn btn-primary" onclick="nextQuestion(3)">Next</button>
+                            </div>
+                        </div>
+
+                        <div class="ai-question" id="question3">
+                            <h4>3. What makes your idea special and exciting?</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Think about what you're most excited to share with the audience! What would make people stop and say "wow, that's brilliant!" This is your moment to shine and show your passion.</p>
+                            <textarea id="advantage" placeholder="Example: What excites me most is that our solution costs 70% less than anything out there, and seniors don't have to change their daily routines at all. When I tell people about this, they immediately think of their own grandparents and get excited about the possibilities!"></textarea>
+                            <div class="ai-buttons">
+                                <button type="button" class="btn btn-outline" onclick="nextQuestion(2)">Back</button>
+                                <button type="button" class="btn btn-primary" onclick="nextQuestion(4)">Next</button>
+                            </div>
+                        </div>
+
+                        <div class="ai-question" id="question4">
+                            <h4>4. What do you need to succeed?</h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Be specific about funding, mentorship, partnerships, or other resources you're seeking.</p>
+                            <textarea id="needs" placeholder="Example: We're seeking $100K in funding to hire 2 developers and scale production. We also need mentorship in healthcare regulations and partnerships with senior living communities."></textarea>
+                            <div class="ai-buttons">
+                                <button type="button" class="btn btn-outline" onclick="nextQuestion(3)">Back</button>
+                                <button type="button" class="btn btn-primary" onclick="generateDescription()">Generate Description</button>
+                            </div>
+                        </div>
+
+                        <div class="ai-suggestion" id="aiSuggestion">
+                            <h4>Your Shark Tank Business Description</h4>
+                            <p style="color: #666; margin-bottom: 15px;">Here's your professional business description based on your answers:</p>
+                            <div class="ai-suggestion-text" id="suggestionText"></div>
+                            <div class="ai-buttons">
+                                <button type="button" class="btn btn-primary" onclick="acceptSuggestion()">Use This Description</button>
+                                <button type="button" class="btn btn-outline" onclick="editSuggestion()">Copy & Edit</button>
+                                <button type="button" class="btn btn-secondary" onclick="restartAI()">Start Over</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <textarea id="businessDescription" name="businessDescription" required placeholder="Describe your business idea, the problem it solves, your target market, competitive advantage, and what you're seeking from this event..."></textarea>
+                    <div class="error" id="businessDescriptionError">Please provide a business description</div>
+                </div>
+
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Register for ACC Shark Tank
+                </button>
+            </form>
+
+            <div class="loading" id="loadingState">
+                <div class="spinner"></div>
+                <p>Submitting your registration...</p>
+            </div>
+
+            <div class="success-message" id="successMessage">
+                <h3>Registration Successful!</h3>
+                <p>Thank you for registering for ACC Shark Tank! We'll send you event details and updates via email.</p>
+                <p><strong>What's next?</strong> Start preparing your pitch and get ready to impress our panel of investors!</p>
+            </div>
+
+
+        </div>
+    </div>
+
+    <script>
+        /* ****************************************
+         * Sanitize user input to prevent XSS attacks
+         * @param (string|any) input : user input to sanitize
+         * @return (string|any) : sanitized input safe for DOM
+         * @note Uses DOMPurify library for XSS prevention
+         ****************************************/
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return input;
+            return DOMPurify.sanitize(input.trim());
+        }
+
+        /* ****************************************
+         * Validate all required form fields and email format
+         * @param na : uses global form elements
+         * @return (bool) : true if all validation passes, false otherwise
+         * @note Displays error messages and highlights invalid fields
+         ****************************************/
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = ['fullName', 'email', 'major', 'businessName', 'businessDescription'];
+            
+            requiredFields.forEach(field => {
+                const input = document.getElementById(field);
+                const error = document.getElementById(field + 'Error');
+                
+                if (!input.value.trim()) {
+                    error.style.display = 'block';
+                    input.style.borderColor = '#e74c3c';
+                    isValid = false;
+                } else {
+                    error.style.display = 'none';
+                    input.style.borderColor = '#e0e0e0';
+                }
+            });
+
+            // Email validation
+            const email = document.getElementById('email');
+            const emailError = document.getElementById('emailError');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email.value.trim() && !emailRegex.test(email.value.trim())) {
+                emailError.textContent = 'Please enter a valid email address';
+                emailError.style.display = 'block';
+                email.style.borderColor = '#e74c3c';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        // AI Assistant functionality
+        let currentQuestion = 1;
+        const aiToggle = document.getElementById('aiToggle');
+        const aiAssistant = document.getElementById('aiAssistant');
+        let aiEnabled = false;
+
+        aiToggle.addEventListener('click', function() {
+            aiEnabled = !aiEnabled;
+            aiToggle.classList.toggle('active', aiEnabled);
+            aiAssistant.classList.toggle('active', aiEnabled);
+            
+            if (aiEnabled) {
+                showQuestion(1);
+            }
+        });
+
+        /* ****************************************
+         * Navigate between AI assistant questions
+         * @param (int) questionNum : question number to display (1-4)
+         * @return na : void function
+         * @note Hides all questions then shows specified question
+         ****************************************/
+        function showQuestion(questionNum) {
+            document.querySelectorAll('.ai-question').forEach(q => q.classList.remove('active'));
+            document.getElementById(`question${questionNum}`).classList.add('active');
+            currentQuestion = questionNum;
+        }
+
+        /* ****************************************
+         * Move to next question in AI assistant flow
+         * @param (int) questionNum : next question number to show
+         * @return na : void function
+         * @note Calls showQuestion to handle display logic
+         ****************************************/
+        function nextQuestion(questionNum) {
+            showQuestion(questionNum);
+        }
+
+        /* ****************************************
+         * Generate business description from AI assistant answers
+         * @param na : uses values from AI question form fields
+         * @return na : void function, displays generated description
+         * @note Validates all fields are complete before generating
+         * @note Scrolls to suggestion for better UX
+         ****************************************/
+        function generateDescription() {
+            const concept = sanitizeInput(document.getElementById('concept').value);
+            const problem = sanitizeInput(document.getElementById('problem').value);
+            const advantage = sanitizeInput(document.getElementById('advantage').value);
+            const needs = sanitizeInput(document.getElementById('needs').value);
+
+            console.log('Concept:', concept);
+            console.log('Problem:', problem);
+            console.log('Advantage:', advantage);
+            console.log('Needs:', needs);
+
+            if (!concept || !problem || !advantage || !needs) {
+                console.log('Missing fields detected');
+                alert('Please complete all questions to generate your business description.');
+                return;
+            }
+
+            const description = `${concept}
+
+THE PROBLEM: ${problem}
+
+WHAT MAKES IT SPECIAL: ${advantage}
+
+WHAT WE'RE SEEKING: ${needs}
+
+This represents a significant opportunity to make a meaningful impact while building a sustainable and profitable business.`;
+
+            console.log('Generated description length:', description.length);
+            
+            const suggestionElement = document.getElementById('suggestionText');
+            const aiSuggestionElement = document.getElementById('aiSuggestion');
+            
+            console.log('Suggestion element found:', !!suggestionElement);
+            console.log('AI suggestion element found:', !!aiSuggestionElement);
+            
+            if (suggestionElement && aiSuggestionElement) {
+                suggestionElement.textContent = description;
+                aiSuggestionElement.classList.add('active');
+                console.log('Description applied successfully');
+                
+                // Scroll to the suggestion
+                aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                console.error('Could not find suggestion elements');
+            }
+        }
+
+        /* ****************************************
+         * Copy AI-generated description to main form field
+         * @param na : uses generated description from suggestion box
+         * @return na : void function
+         * @note Closes AI assistant and scrolls to business description field
+         ****************************************/
+        function acceptSuggestion() {
+            const suggestion = document.getElementById('suggestionText').textContent;
+            document.getElementById('businessDescription').value = suggestion;
+            aiAssistant.classList.remove('active');
+            aiToggle.classList.remove('active');
+            aiEnabled = false;
+            
+            // Scroll to business description
+            document.getElementById('businessDescription').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ****************************************
+         * Copy AI suggestion to main form for manual editing
+         * @param na : uses generated description from suggestion box
+         * @return na : void function
+         * @note Focuses cursor on business description field for editing
+         ****************************************/
+        function editSuggestion() {
+            const suggestion = document.getElementById('suggestionText').textContent;
+            document.getElementById('businessDescription').value = suggestion;
+            document.getElementById('businessDescription').focus();
+        }
+
+        /* ****************************************
+         * Reset AI assistant to start over
+         * @param na : clears all AI form fields
+         * @return na : void function
+         * @note Returns to first question after clearing all inputs
+         ****************************************/
+        function restartAI() {
+            document.getElementById('aiSuggestion').classList.remove('active');
+            document.getElementById('concept').value = '';
+            document.getElementById('problem').value = '';
+            document.getElementById('advantage').value = '';
+            document.getElementById('needs').value = '';
+            showQuestion(1);
+        }
+
+        // Form submission
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const formData = {
+                fullName: sanitizeInput(document.getElementById('fullName').value),
+                email: sanitizeInput(document.getElementById('email').value),
+                major: document.getElementById('major').value,
+                businessName: sanitizeInput(document.getElementById('businessName').value),
+                businessDescription: sanitizeInput(document.getElementById('businessDescription').value),
+                timestamp: new Date().toISOString()
+            };
+
+            // Show loading state
+            document.getElementById('loadingState').classList.add('active');
+            document.getElementById('submitBtn').disabled = true;
+
+            // Submit to Vercel serverless function
+            fetch('/api/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                showSuccess();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('submitBtn').disabled = false;
+                alert('Registration failed. Please try again. Error: ' + error.message);
+            });
+        });
+
+        /* ****************************************
+         * Display success message after form submission
+         * @param na : modifies global UI elements
+         * @return na : void function
+         * @note Hides loading state and form, shows success message
+         ****************************************/
+        function showSuccess() {
+            document.getElementById('loadingState').classList.remove('active');
+            document.getElementById('successMessage').classList.add('active');
+            document.getElementById('registrationForm').style.display = 'none';
+            
+            // Scroll to success message
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Real-time validation
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('blur', function() {
+                const errorElement = document.getElementById(this.id + 'Error');
+                if (errorElement) {
+                    if (this.value.trim()) {
+                        errorElement.style.display = 'none';
+                        this.style.borderColor = '#e0e0e0';
+                    }
+                }
+            });
+        });
+
+        // Email validation on blur
+        document.getElementById('email').addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const errorElement = document.getElementById('emailError');
+            
+            if (this.value.trim() && !emailRegex.test(this.value.trim())) {
+                errorElement.style.display = 'block';
+                this.style.borderColor = '#e74c3c';
+            } else if (this.value.trim()) {
+                errorElement.style.display = 'none';
+                this.style.borderColor = '#e0e0e0';
+            }
+        });
+    </script>
+</body>
+</html>
