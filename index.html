@@ -1,5 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
+<!-- ****************************************
+ACC Shark Tank Registration Form
+A modern, AI-enhanced registration system for Austin Community College's
+premier entrepreneurship event with Google Sheets integration and email confirmation.
+
+@author ACC Development Team
+@version 2.0
+@date July 2025
+@note This form includes XSS protection, input validation, and SendGrid email integration
+@note Uses DOMPurify for security and professional ACC branding
+@note Implements 3-question AI submission guide for streamlined user experience
+********************************************-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -504,21 +516,11 @@
                         </div>
 
                         <div class="ai-question" id="question3">
-                            <h4>3. What makes your idea special and exciting?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Think about what you're most excited to share with the audience! What would make people stop and say "wow, that's brilliant!" This is your moment to shine and show your passion.</p>
-                            <textarea id="advantage" placeholder="Example: What excites me most is that our solution costs 70% less than anything out there, and seniors don't have to change their daily routines at all. When I tell people about this, they immediately think of their own grandparents and get excited about the possibilities!"></textarea>
-                            <div class="ai-buttons">
-                                <button type="button" class="btn btn-outline" onclick="nextQuestion(2)">Back</button>
-                                <button type="button" class="btn btn-primary" onclick="nextQuestion(4)">Next</button>
-                            </div>
-                        </div>
-
-                        <div class="ai-question" id="question4">
-                            <h4>4. What do you need to succeed?</h4>
+                            <h4>3. What do you need to succeed?</h4>
                             <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Be specific about funding, mentorship, partnerships, or other resources you're seeking.</p>
                             <textarea id="needs" placeholder="Example: We're seeking $100K in funding to hire 2 developers and scale production. We also need mentorship in healthcare regulations and partnerships with senior living communities."></textarea>
                             <div class="ai-buttons">
-                                <button type="button" class="btn btn-outline" onclick="nextQuestion(3)">Back</button>
+                                <button type="button" class="btn btn-outline" onclick="nextQuestion(2)">Back</button>
                                 <button type="button" class="btn btn-primary" onclick="generateDescription()">Generate Description</button>
                             </div>
                         </div>
@@ -554,8 +556,6 @@
                 <p>Thank you for registering for ACC Shark Tank! We'll send you event details and updates via email.</p>
                 <p><strong>What's next?</strong> Start preparing your pitch and get ready to impress our panel of investors!</p>
             </div>
-
-
         </div>
     </div>
 
@@ -565,6 +565,7 @@
          * @param (string|any) input : user input to sanitize
          * @return (string|any) : sanitized input safe for DOM
          * @note Uses DOMPurify library for XSS prevention
+         * @note Returns input unchanged if not string type
          ****************************************/
         function sanitizeInput(input) {
             if (typeof input !== 'string') return input;
@@ -576,6 +577,7 @@
          * @param na : uses global form elements
          * @return (bool) : true if all validation passes, false otherwise
          * @note Displays error messages and highlights invalid fields
+         * @note Validates email format using regex pattern
          ****************************************/
         function validateForm() {
             let isValid = true;
@@ -595,7 +597,7 @@
                 }
             });
 
-            // Email validation
+            // Email validation using regex pattern
             const email = document.getElementById('email');
             const emailError = document.getElementById('emailError');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -610,12 +612,19 @@
             return isValid;
         }
 
-        // AI Assistant functionality
+        // Global variables for AI Assistant functionality
         let currentQuestion = 1;
         const aiToggle = document.getElementById('aiToggle');
         const aiAssistant = document.getElementById('aiAssistant');
         let aiEnabled = false;
 
+        /* ****************************************
+         * Initialize AI assistant toggle functionality
+         * @param na : uses global DOM elements
+         * @return na : void function
+         * @note Sets up click event listener for AI toggle switch
+         * @note Toggles AI assistant visibility and resets to first question
+         ****************************************/
         aiToggle.addEventListener('click', function() {
             aiEnabled = !aiEnabled;
             aiToggle.classList.toggle('active', aiEnabled);
@@ -628,9 +637,10 @@
 
         /* ****************************************
          * Navigate between AI assistant questions
-         * @param (int) questionNum : question number to display (1-4)
+         * @param (int) questionNum : question number to display (1-3)
          * @return na : void function
          * @note Hides all questions then shows specified question
+         * @note Updates global currentQuestion variable
          ****************************************/
         function showQuestion(questionNum) {
             document.querySelectorAll('.ai-question').forEach(q => q.classList.remove('active'));
@@ -642,7 +652,7 @@
          * Move to next question in AI assistant flow
          * @param (int) questionNum : next question number to show
          * @return na : void function
-         * @note Calls showQuestion to handle display logic
+         * @note Wrapper function that calls showQuestion for navigation
          ****************************************/
         function nextQuestion(questionNum) {
             showQuestion(questionNum);
@@ -652,21 +662,20 @@
          * Generate business description from AI assistant answers
          * @param na : uses values from AI question form fields
          * @return na : void function, displays generated description
-         * @note Validates all fields are complete before generating
-         * @note Scrolls to suggestion for better UX
+         * @note Validates all 3 questions are completed before generating
+         * @note Creates formatted business description and displays in suggestion box
+         * @note Scrolls to suggestion for better user experience
          ****************************************/
         function generateDescription() {
             const concept = sanitizeInput(document.getElementById('concept').value);
             const problem = sanitizeInput(document.getElementById('problem').value);
-            const advantage = sanitizeInput(document.getElementById('advantage').value);
             const needs = sanitizeInput(document.getElementById('needs').value);
 
             console.log('Concept:', concept);
             console.log('Problem:', problem);
-            console.log('Advantage:', advantage);
             console.log('Needs:', needs);
 
-            if (!concept || !problem || !advantage || !needs) {
+            if (!concept || !problem || !needs) {
                 console.log('Missing fields detected');
                 alert('Please complete all questions to generate your business description.');
                 return;
@@ -675,8 +684,6 @@
             const description = `${concept}
 
 THE PROBLEM: ${problem}
-
-WHAT MAKES IT SPECIAL: ${advantage}
 
 WHAT WE'RE SEEKING: ${needs}
 
@@ -695,7 +702,7 @@ This represents a significant opportunity to make a meaningful impact while buil
                 aiSuggestionElement.classList.add('active');
                 console.log('Description applied successfully');
                 
-                // Scroll to the suggestion
+                // Scroll to the suggestion for better UX
                 aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
             } else {
                 console.error('Could not find suggestion elements');
@@ -707,6 +714,7 @@ This represents a significant opportunity to make a meaningful impact while buil
          * @param na : uses generated description from suggestion box
          * @return na : void function
          * @note Closes AI assistant and scrolls to business description field
+         * @note Resets AI enabled state and toggle appearance
          ****************************************/
         function acceptSuggestion() {
             const suggestion = document.getElementById('suggestionText').textContent;
@@ -715,7 +723,7 @@ This represents a significant opportunity to make a meaningful impact while buil
             aiToggle.classList.remove('active');
             aiEnabled = false;
             
-            // Scroll to business description
+            // Scroll to business description field for review
             document.getElementById('businessDescription').scrollIntoView({ behavior: 'smooth' });
         }
 
@@ -723,7 +731,7 @@ This represents a significant opportunity to make a meaningful impact while buil
          * Copy AI suggestion to main form for manual editing
          * @param na : uses generated description from suggestion box
          * @return na : void function
-         * @note Focuses cursor on business description field for editing
+         * @note Focuses cursor on business description field for immediate editing
          ****************************************/
         function editSuggestion() {
             const suggestion = document.getElementById('suggestionText').textContent;
@@ -735,18 +743,25 @@ This represents a significant opportunity to make a meaningful impact while buil
          * Reset AI assistant to start over
          * @param na : clears all AI form fields
          * @return na : void function
-         * @note Returns to first question after clearing all inputs
+         * @note Clears all 3 question inputs and returns to first question
+         * @note Hides suggestion box and resets AI flow
          ****************************************/
         function restartAI() {
             document.getElementById('aiSuggestion').classList.remove('active');
             document.getElementById('concept').value = '';
             document.getElementById('problem').value = '';
-            document.getElementById('advantage').value = '';
             document.getElementById('needs').value = '';
             showQuestion(1);
         }
 
-        // Form submission
+        /* ****************************************
+         * Handle form submission with validation and API integration
+         * @param (Event) e : form submission event
+         * @return na : void function
+         * @note Prevents default form submission and handles via JavaScript
+         * @note Validates form, shows loading state, and submits to serverless function
+         * @note Integrates with Google Sheets and SendGrid email confirmation
+         ****************************************/
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
             
@@ -763,7 +778,7 @@ This represents a significant opportunity to make a meaningful impact while buil
                 timestamp: new Date().toISOString()
             };
 
-            // Show loading state
+            // Show loading state and disable submit button
             document.getElementById('loadingState').classList.add('active');
             document.getElementById('submitBtn').disabled = true;
 
@@ -798,6 +813,7 @@ This represents a significant opportunity to make a meaningful impact while buil
          * @param na : modifies global UI elements
          * @return na : void function
          * @note Hides loading state and form, shows success message
+         * @note Scrolls to success message for user confirmation
          ****************************************/
         function showSuccess() {
             document.getElementById('loadingState').classList.remove('active');
@@ -808,7 +824,13 @@ This represents a significant opportunity to make a meaningful impact while buil
             document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
         }
 
-        // Real-time validation
+        /* ****************************************
+         * Initialize real-time form validation
+         * @param na : uses all form input elements
+         * @return na : void function
+         * @note Sets up blur event listeners for immediate validation feedback
+         * @note Clears error states when valid input is entered
+         ****************************************/
         document.querySelectorAll('input, select, textarea').forEach(input => {
             input.addEventListener('blur', function() {
                 const errorElement = document.getElementById(this.id + 'Error');
@@ -821,7 +843,13 @@ This represents a significant opportunity to make a meaningful impact while buil
             });
         });
 
-        // Email validation on blur
+        /* ****************************************
+         * Initialize email validation on field blur
+         * @param na : uses email input element
+         * @return na : void function
+         * @note Validates email format in real-time using regex
+         * @note Shows immediate feedback for invalid email addresses
+         ****************************************/
         document.getElementById('email').addEventListener('blur', function() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
             const errorElement = document.getElementById('emailError');
