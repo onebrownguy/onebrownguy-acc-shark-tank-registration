@@ -6,6 +6,12 @@
  ****************************************/
 
 import { google } from 'googleapis';
+import sgMail from '@sendgrid/mail';
+
+/* ****************************************
+ * Initialize SendGrid with API key from environment
+ ****************************************/
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 /* ****************************************
  * Main handler function for form submissions
@@ -147,8 +153,33 @@ export default async function handler(req, res) {
       insertDataOption: 'INSERT_ROWS',
       requestBody: {
         values
+
+
       }
     });
+
+    /* ****************************************
+    * Send confirmation email to registrant
+    * @param (string) email : recipient email address
+    * @param (string) fullName : recipient name
+    * @return na : sends email confirmation
+    * @exception Logs error but continues if email fails
+    ****************************************/    
+    try {
+      const confirmationEmail = {
+        to: email,
+        from: process.env.SENDGRID_SENDER_EMAIL,
+        subject: 'ACC Shark Tank Registration Confirmation',
+        html: `<h2>Registration Confirmed!</h2><p>Dear ${fullName}, thank you for registering for ACC Shark Tank with ${businessName}.</p>`
+      };
+      
+      await sgMail.send(confirmationEmail);
+      console.log('Email sent to:', email);
+    } catch (emailError) {
+      console.error('Email failed:', emailError);
+    }
+    
+    
 
     /* ****************************************
      * Log successful registration for monitoring
