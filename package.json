@@ -8,8 +8,10 @@
     "build": "echo 'No build step required for static site'"
   },
   "dependencies": {
+    "@sendgrid/mail": "^7.7.0",
+    "bcrypt": "^6.0.0",
     "googleapis": "^126.0.1",
-    "@sendgrid/mail": "^7.7.0"
+    "iron-session": "^8.0.4"
   },
   "engines": {
     "node": ">=18.0.0"
