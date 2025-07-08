@@ -1,5 +1,8 @@
 # Ignore everything
 *
+# ignore environmental variables
+.env*
+
 # Unignore what we want to track
 !index.html
 !api/
