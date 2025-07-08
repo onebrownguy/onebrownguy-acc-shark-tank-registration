@@ -270,6 +270,26 @@ Secure authentication portal for ACC Shark Tank event administrators
             background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><circle cx="12" cy="16" r="1"></circle><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>');
         }
 
+        .password-toggle {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #666;
+            transition: color 0.3s ease;
+            z-index: 10;
+        }
+
+        .password-toggle:hover {
+            color: #003366;
+        }
+
+        .password-toggle svg {
+            width: 20px;
+            height: 20px;
+        }
+
         @media (max-width: 768px) {
             .login-container {
                 margin: 10px;
@@ -335,6 +355,12 @@ Secure authentication portal for ACC Shark Tank event administrators
                     <label for="password" class="required">Password</label>
                     <div class="input-icon password-icon">
                         <input type="password" id="password" name="password" required autocomplete="current-password">
+                        <div class="password-toggle" onclick="togglePasswordVisibility()">
+                            <svg id="eyeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                <circle cx="12" cy="12" r="3"></circle>
+                            </svg>
+                        </div>
                     </div>
                 </div>
 
@@ -355,6 +381,32 @@ Secure authentication portal for ACC Shark Tank event administrators
     </div>
 
     <script>
+        /* ****************************************
+         * Toggle password visibility
+         * @param na : toggles password input type and eye icon
+         * @return na : void function
+         ****************************************/
+        function togglePasswordVisibility() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            
+            if (passwordInput.type === 'password') {
+                // Show password
+                passwordInput.type = 'text';
+                eyeIcon.innerHTML = `
+                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path>
+                    <line x1="1" y1="1" x2="23" y2="23"></line>
+                `;
+            } else {
+                // Hide password
+                passwordInput.type = 'password';
+                eyeIcon.innerHTML = `
+                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                    <circle cx="12" cy="12" r="3"></circle>
+                `;
+            }
+        }
+
         /* ****************************************
          * Sanitize user input to prevent XSS attacks
          * @param (string|any) input : user input to sanitize
