@@ -31,6 +31,42 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             padding: 20px;
         }
 
+        /* Back button styles */
+        .back-button-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
+
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #003366;
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+
+        .back-button:hover {
+            background: #f8f9fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            color: #002244;
+            text-decoration: none;
+        }
+
+        .back-button svg {
+            flex-shrink: 0;
+        }
+
         .container {
             max-width: 800px;
             margin: 0 auto;
@@ -389,7 +425,35 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             overflow-y: auto;
         }
 
+        .info-box {
+            background: #e8f4f8;
+            border-left: 4px solid #003366;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .info-box h3 {
+            color: #003366;
+            margin-bottom: 10px;
+        }
+
+        .info-box p {
+            color: #666;
+            line-height: 1.5;
+        }
+
         @media (max-width: 768px) {
+            .back-button-container {
+                top: 15px;
+                left: 15px;
+            }
+            
+            .back-button {
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+
             .container {
                 margin: 10px;
                 border-radius: 15px;
@@ -411,27 +475,19 @@ premier entrepreneurship event with Google Sheets integration and email confirma
                 flex-direction: column;
             }
         }
-
-        .info-box {
-            background: #e8f4f8;
-            border-left: 4px solid #003366;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .info-box h3 {
-            color: #003366;
-            margin-bottom: 10px;
-        }
-
-        .info-box p {
-            color: #666;
-            line-height: 1.5;
-        }
     </style>
 </head>
 <body>
+    <!-- Back to Nest Fest Button -->
+    <div class="back-button-container">
+        <a href="https://nest-fest.org/" class="back-button">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            Back to Nest Fest
+        </a>
+    </div>
+
     <div class="container">
         <div class="header">
             <h1>ACC Shark Tank</h1>
