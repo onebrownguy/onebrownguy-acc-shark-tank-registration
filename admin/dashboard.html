@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- ****************************************
+ACC Shark Tank Admin Dashboard
+Secure administrative interface for managing ACC Shark Tank event submissions
+
+@author ACC Development Team (Abel)
+@version 1.0
+@date July 2025
+@note Requires authentication and appropriate role permissions
+@note Displays submissions, manages users, and provides event oversight
+********************************************-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ACC Shark Tank - Admin Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f8f9fa;
+            min-height: 100vh;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 20px;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .logout-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Container and Layout */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 30px 20px;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid #003366;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-card h3 {
+            color: #666;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #003366;
+            margin-bottom: 5px;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            color: #28a745;
+        }
+
+        /* Main Content Area */
+        .content-section {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            color: #333;
+            font-weight: 600;
+        }
+
+        /* Table Styles */
+        .submissions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .submissions-table th,
+        .submissions-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .submissions-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .submissions-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .status-new {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-reviewed {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-approved {
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: #003366;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #004080;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+
+        /* Loading States */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #003366;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .container {
+                padding: 20px 15px;
+            }
+            
+            .submissions-table {
+                font-size: 0.85rem;
+            }
+            
+            .submissions-table th,
+            .submissions-table td {
+                padding: 10px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .stat-number {
+                font-size: 2rem;
+            }
+        }
+
+        /* Alert Styles */
+        .alert {
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid;
+        }
+
+        .alert-error {
+            background: #f8d7da;
+            border-color: #dc3545;
+            color: #721c24;
+        }
+
+        .alert-success {
+            background: #d4edda;
+            border-color: #28a745;
+            color: #155724;
+        }
+
+        .alert.hidden {
+            display: none;
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .action-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .action-card:hover {
+            border-color: #003366;
+            transform: translateY(-2px);
+        }
+
+        .action-icon {
+            width: 50px;
+            height: 50px;
+            background: #003366;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 15px;
+        }
+
+        .action-icon svg {
+            width: 24px;
+            height: 24px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <div class="header-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M9 12l2 2 4-4"></path>
+                        <path d="M21 12c-1 0-3-1-3-3s2-3 3-3 3 1 3 3-2 3-3 3"></path>
+                        <path d="M3 12c1 0 3-1 3-3s-2-3-3-3-3 1-3 3 2 3 3 3"></path>
+                        <path d="M15 12h2a2 2 0 0 1 2 2v2a2 2 0 0 1-2 2h-2"></path>
+                        <path d="M9 12H7a2 2 0 0 0-2 2v2a2 2 0 0 0 2 2h2"></path>
+                    </svg>
+                </div>
+                <h1>ACC Shark Tank Dashboard</h1>
+            </div>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div id="userName" style="font-weight: 500;">Loading...</div>
+                    <div id="userRole" style="font-size: 0.85rem; opacity: 0.8;">Loading...</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Alert Messages -->
+        <div id="alertContainer"></div>
+
+        <!-- Dashboard Stats -->
+        <div class="dashboard-grid">
+            <div class="stat-card">
+                <h3>Total Submissions</h3>
+                <div class="stat-number" id="totalSubmissions">-</div>
+                <div class="stat-change">+12% from last week</div>
+            </div>
+            <div class="stat-card">
+                <h3>New Today</h3>
+                <div class="stat-number" id="newToday">-</div>
+                <div class="stat-change">Real-time updates</div>
+            </div>
+            <div class="stat-card">
+                <h3>Under Review</h3>
+                <div class="stat-number" id="underReview">-</div>
+                <div class="stat-change">Pending evaluation</div>
+            </div>
+            <div class="stat-card">
+                <h3>Approved</h3>
+                <div class="stat-number" id="approved">-</div>
+                <div class="stat-change">Ready for event</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Quick Actions</h2>
+            </div>
+            <div class="quick-actions">
+                <div class="action-card" onclick="exportSubmissions()">
+                    <div class="action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                            <polyline points="7,10 12,15 17,10"></polyline>
+                            <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                    </div>
+                    <h4>Export Data</h4>
+                    <p>Download all submissions</p>
+                </div>
+                <div class="action-card" onclick="refreshData()">
+                    <div class="action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="23,4 23,10 17,10"></polyline>
+                            <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                        </svg>
+                    </div>
+                    <h4>Refresh Data</h4>
+                    <p>Update dashboard stats</p>
+                </div>
+                <div class="action-card" onclick="viewAnalytics()">
+                    <div class="action-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"></polyline>
+                        </svg>
+                    </div>
+                    <h4>Analytics</h4>
+                    <p>View detailed reports</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Submissions -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">Recent Submissions</h2>
+                <button class="btn btn-primary" onclick="refreshSubmissions()">Refresh</button>
+            </div>
+
+            <div class="loading" id="submissionsLoading">
+                <div class="spinner"></div>
+                <p>Loading submissions...</p>
+            </div>
+
+            <div id="submissionsContent">
+                <table class="submissions-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Business Name</th>
+                            <th>Major</th>
+                            <th>Submitted</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="submissionsTableBody">
+                        <!-- Data will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentUser = null;
+        let submissions = [];
+
+        /* ****************************************
+         * Initialize dashboard on page load
+         * @param na : checks authentication and loads data
+         * @return na : void function
+         ****************************************/
+        window.addEventListener('load', async function() {
+            await checkAuthentication();
+            await loadDashboardData();
+        });
+
+        /* ****************************************
+         * Check if user is authenticated
+         * @param na : makes API call to verify session
+         * @return na : void function, redirects if not authenticated
+         ****************************************/
+        async function checkAuthentication() {
+            try {
+                const response = await fetch('/api/session');
+                const data = await response.json();
+
+                if (!response.ok || !data.authenticated) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+
+                currentUser = data.user;
+                updateUserDisplay();
+
+            } catch (error) {
+                console.error('Authentication check failed:', error);
+                window.location.href = '/login.html';
+            }
+        }
+
+        /* ****************************************
+         * Update user display in header
+         * @param na : uses global currentUser object
+         * @return na : void function
+         ****************************************/
+        function updateUserDisplay() {
+            if (!currentUser) return;
+
+            document.getElementById('userName').textContent = currentUser.name || 'Admin User';
+            document.getElementById('userRole').textContent = currentUser.role || 'admin';
+            
+            // Set avatar initial
+            const avatar = document.getElementById('userAvatar');
+            const initial = (currentUser.name || currentUser.email || 'A').charAt(0).toUpperCase();
+            avatar.textContent = initial;
+        }
+
+        /* ****************************************
+         * Load dashboard data including stats and submissions
+         * @param na : makes multiple API calls to populate dashboard
+         * @return na : void function
+         ****************************************/
+        async function loadDashboardData() {
+            await loadSubmissions();
+            updateDashboardStats();
+        }
+
+        /* ****************************************
+         * Load submissions from Google Sheets
+         * @param na : fetches submission data and updates table
+         * @return na : void function
+         ****************************************/
+        async function loadSubmissions() {
+            const loadingElement = document.getElementById('submissionsLoading');
+            const contentElement = document.getElementById('submissionsContent');
+
+            try {
+                loadingElement.classList.add('active');
+                contentElement.style.display = 'none';
+
+                // Fetch submissions from API
+                const response = await fetch('/api/submissions');
+                
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status}`);
+                }
+
+                const data = await response.json();
+                
+                if (data.success) {
+                    submissions = data.data.submissions;
+                    // Update stats from API response
+                    if (data.data.stats) {
+                        updateDashboardStatsFromAPI(data.data.stats);
+                    }
+                } else {
+                    throw new Error('Failed to fetch submissions');
+                }
+
+                updateSubmissionsTable();
+
+            } catch (error) {
+                console.error('Failed to load submissions:', error);
+                showAlert('Failed to load submissions. Please try again.', 'error');
+                
+                // Fallback to mock data for demo purposes
+                submissions = [
+                    {
+                        id: 1,
+                        fullName: 'Demo User',
+                        email: 'demo@austincc.edu',
+                        businessName: 'Sample Business',
+                        major: 'Business Administration',
+                        timestamp: new Date().toISOString(),
+                        status: 'new'
+                    }
+                ];
+                updateSubmissionsTable();
+            } finally {
+                loadingElement.classList.remove('active');
+                contentElement.style.display = 'block';
+            }
+        }
+
+        /* ****************************************
+         * Update submissions table with data
+         * @param na : uses global submissions array
+         * @return na : void function
+         ****************************************/
+        function updateSubmissionsTable() {
+            const tbody = document.getElementById('submissionsTableBody');
+            
+            if (submissions.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 40px; color: #666;">No submissions found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = submissions.map(submission => `
+                <tr>
+                    <td>${DOMPurify.sanitize(submission.fullName)}</td>
+                    <td>${DOMPurify.sanitize(submission.email)}</td>
+                    <td>${DOMPurify.sanitize(submission.businessName)}</td>
+                    <td>${DOMPurify.sanitize(submission.major)}</td>
+                    <td>${formatDate(submission.timestamp)}</td>
+                    <td><span class="status-badge status-${submission.status}">${submission.status}</span></td>
+                    <td>
+                        <button class="btn btn-small btn-primary" onclick="viewSubmission(${submission.id})">View</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        /* ****************************************
+         * Update dashboard statistics from API response
+         * @param (object) stats : statistics object from API
+         * @return na : void function
+         ****************************************/
+        function updateDashboardStatsFromAPI(stats) {
+            // Animate numbers from API stats
+            animateNumber('totalSubmissions', stats.total);
+            animateNumber('newToday', stats.timePeriods.today);
+            animateNumber('underReview', stats.statusCounts.reviewed);
+            animateNumber('approved', stats.statusCounts.approved);
+        }
+
+        /* ****************************************
+         * Update dashboard statistics (fallback for local calculation)
+         * @param na : calculates stats from submissions data
+         * @return na : void function
+         ****************************************/
+        function updateDashboardStats() {
+            const total = submissions.length;
+            const today = new Date().toISOString().split('T')[0];
+            const newToday = submissions.filter(s => s.timestamp.startsWith(today)).length;
+            const underReview = submissions.filter(s => s.status === 'reviewed').length;
+            const approved = submissions.filter(s => s.status === 'approved').length;
+
+            // Animate numbers
+            animateNumber('totalSubmissions', total);
+            animateNumber('newToday', newToday);
+            animateNumber('underReview', underReview);
+            animateNumber('approved', approved);
+        }
+
+        /* ****************************************
+         * Animate number changes in stat cards
+         * @param (string) elementId : ID of element to animate
+         * @param (number) targetValue : final value to display
+         * @return na : void function
+         ****************************************/
+        function animateNumber(elementId, targetValue) {
+            const element = document.getElementById(elementId);
+            const startValue = parseInt(element.textContent) || 0;
+            const increment = Math.ceil((targetValue - startValue) / 20);
+            
+            let currentValue = startValue;
+            const timer = setInterval(() => {
+                currentValue += increment;
+                if ((increment > 0 && currentValue >= targetValue) || 
+                    (increment < 0 && currentValue <= targetValue)) {
+                    currentValue = targetValue;
+                    clearInterval(timer);
+                }
+                element.textContent = currentValue;
+            }, 50);
+        }
+
+        /* ****************************************
+         * Format timestamp for display
+         * @param (string) timestamp : ISO timestamp string
+         * @return (string) : formatted date string
+         ****************************************/
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            return date.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        /* ****************************************
+         * Show alert message to user
+         * @param (string) message : message to display
+         * @param (string) type : alert type (success, error, etc.)
+         * @return na : void function
+         ****************************************/
+        function showAlert(message, type = 'error') {
+            const container = document.getElementById('alertContainer');
+            const alertId = 'alert-' + Date.now();
+            
+            const alertHtml = `
+                <div id="${alertId}" class="alert alert-${type}">
+                    ${DOMPurify.sanitize(message)}
+                    <button onclick="hideAlert('${alertId}')" style="float: right; background: none; border: none; color: inherit; cursor: pointer; font-size: 1.2rem;">&times;</button>
+                </div>
+            `;
+            
+            container.insertAdjacentHTML('beforeend', alertHtml);
+            
+            // Auto-hide after 5 seconds
+            setTimeout(() => hideAlert(alertId), 5000);
+        }
+
+        /* ****************************************
+         * Hide specific alert
+         * @param (string) alertId : ID of alert to hide
+         * @return na : void function
+         ****************************************/
+        function hideAlert(alertId) {
+            const alert = document.getElementById(alertId);
+            if (alert) {
+                alert.remove();
+            }
+        }
+
+        /* ****************************************
+         * Refresh submissions data
+         * @param na : reloads submission data from API
+         * @return na : void function
+         ****************************************/
+        async function refreshSubmissions() {
+            await loadSubmissions();
+            showAlert('Submissions refreshed successfully', 'success');
+        }
+
+        /* ****************************************
+         * Refresh all dashboard data
+         * @param na : reloads all dashboard components
+         * @return na : void function
+         ****************************************/
+        async function refreshData() {
+            await loadDashboardData();
+            showAlert('Dashboard data refreshed', 'success');
+        }
+
+        /* ****************************************
+         * View individual submission details
+         * @param (number) submissionId : ID of submission to view
+         * @return na : void function
+         ****************************************/
+        function viewSubmission(submissionId) {
+            const submission = submissions.find(s => s.id === submissionId);
+            if (!submission) {
+                showAlert('Submission not found', 'error');
+                return;
+            }
+
+            // For now, just show an alert with basic info
+            // In a full implementation, this would open a modal or navigate to detail page
+            alert(`Submission Details:
+            
+Name: ${submission.fullName}
+Email: ${submission.email}
+Business: ${submission.businessName}
+Major: ${submission.major}
+Status: ${submission.status}
+Submitted: ${formatDate(submission.timestamp)}`);
+        }
+
+        /* ****************************************
+         * Export submissions to CSV
+         * @param na : generates and downloads CSV file
+         * @return na : void function
+         ****************************************/
+        function exportSubmissions() {
+            if (submissions.length === 0) {
+                showAlert('No submissions to export', 'error');
+                return;
+            }
+
+            const csvHeaders = ['Name', 'Email', 'Business Name', 'Major', 'Submitted', 'Status'];
+            const csvRows = submissions.map(s => [
+                s.fullName,
+                s.email,
+                s.businessName,
+                s.major,
+                formatDate(s.timestamp),
+                s.status
+            ]);
+
+            const csvContent = [csvHeaders, ...csvRows]
+                .map(row => row.map(field => `"${field}"`).join(','))
+                .join('\n');
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `acc-shark-tank-submissions-${new Date().toISOString().split('T')[0]}.csv`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+
+            showAlert('Submissions exported successfully', 'success');
+        }
+
+        /* ****************************************
+         * View analytics (placeholder)
+         * @param na : opens analytics view
+         * @return na : void function
+         ****************************************/
+        function viewAnalytics() {
+            showAlert('Analytics feature coming soon!', 'success');
+        }
+
+        /* ****************************************
+         * Logout user and redirect to login
+         * @param na : destroys session and redirects
+         * @return na : void function
+         ****************************************/
+        async function logout() {
+            if (!confirm('Are you sure you want to logout?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/session', {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    // Clear any stored user info
+                    if (typeof(Storage) !== "undefined") {
+                        sessionStorage.removeItem('accUserInfo');
+                    }
+                    
+                    window.location.href = '/login.html';
+                } else {
+                    showAlert('Logout failed. Please try again.', 'error');
+                }
+            } catch (error) {
+                console.error('Logout error:', error);
+                showAlert('Network error during logout', 'error');
+            }
+        }
+    </script>
+</body>
+</html>
