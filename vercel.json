@@ -4,6 +4,15 @@
   "functions": {
     "api/submit.js": {
       "maxDuration": 10
+    },
+    "api/login.js": {
+      "maxDuration": 15
+    },
+    "api/session.js": {
+      "maxDuration": 10
+    },
+    "api/submissions.js": {
+      "maxDuration": 20
     }
   },
   "headers": [
@@ -21,8 +30,36 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         }
       ]
+    },
+    {
+      "source": "/admin/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/login.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/admin",
+      "destination": "/admin/dashboard.html"
     }
   ]
 }
