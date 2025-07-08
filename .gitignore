@@ -1,13 +1,26 @@
 # Ignore everything
 *
-# ignore environmental variables
+
+# Ignore environmental variables
 .env*
 
 # Unignore what we want to track
 !index.html
+!login.html
+!admin/
+!admin/dashboard.html
 !api/
 !api/submit.js
+!api/login.js
+!api/session.js
+!api/submissions.js
+!lib/
+!lib/auth.js
+!lib/sheets.js
+!scripts/
+!scripts/setup-admin.js
 !vercel.json
 !package.json
+!package-lock.json
 !.gitignore
 !README.md
