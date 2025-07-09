@@ -7,6 +7,7 @@
 # Unignore what we want to track
 !index.html
 !login.html
+!participate.html
 !admin/
 !admin/dashboard.html
 !api/
@@ -14,6 +15,7 @@
 !api/login.js
 !api/session.js
 !api/submissions.js
+!api/participate.js
 !lib/
 !lib/auth.js
 !lib/sheets.js
