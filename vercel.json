@@ -13,6 +13,9 @@
     },
     "api/submissions.js": {
       "maxDuration": 20
+    },
+    "api/participate.js": {
+      "maxDuration": 10
     }
   },
   "headers": [
