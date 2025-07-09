@@ -26,3 +26,4 @@
 !package-lock.json
 !.gitignore
 !README.md
+!.env.example          
