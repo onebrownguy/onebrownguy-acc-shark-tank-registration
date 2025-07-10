@@ -3,11 +3,14 @@
  * Creates the first superadmin account for ACC Shark Tank system
  * 
  * @author ACC Development Team
- * @version 1.0
+ * @version 1.1
  * @date July 2025
  * @note Run this script once to create the initial admin account
  * @note Requires GOOGLE_SHEET_ID and Google Sheets credentials to be configured
  ****************************************/
+
+// Load environment variables from .env.local
+require('dotenv').config({ path: '.env.local' });
 
 const bcrypt = require('bcrypt');
 const { createSheetsClient, getSheetValues, appendSheetValues } = require('../lib/sheets');
@@ -103,8 +106,8 @@ async function createInitialAdmin(email, password, name) {
         console.log('👤 Name:', name);
         console.log('🛡️  Role: superadmin');
         console.log('');
-        console.log('🔑 You can now login at: /login.html');
-        console.log('📊 Access dashboard at: /admin/dashboard.html');
+        console.log('🔑 You can now login at: http://localhost:3000/login.html');
+        console.log('📊 Access dashboard at: http://localhost:3000/admin/dashboard.html');
 
     } catch (error) {
         console.error('❌ Failed to create initial admin:', error.message);
@@ -127,7 +130,7 @@ async function interactiveSetup() {
     }
 
     try {
-        console.log('🚀 ACC Shark Tank Admin Setup');
+        console.log('🚀 NEST FEST Admin Setup');
         console.log('===============================\n');
 
         const email = await question('Enter admin email address: ');
@@ -193,7 +196,18 @@ if (require.main === module) {
         console.error('   - GOOGLE_CLIENT_EMAIL');
         console.error('   - GOOGLE_PRIVATE_KEY');
         console.error('');
-        console.error('Please configure these in your .env file first.');
+        console.error('Please configure these in your .env.local file first.');
+        console.error('Current working directory:', process.cwd());
+        console.error('Looking for .env.local file...');
+        
+        // Debug: Check if .env.local exists
+        const fs = require('fs');
+        if (fs.existsSync('.env.local')) {
+            console.error('✅ .env.local file found');
+        } else {
+            console.error('❌ .env.local file not found');
+        }
+        
         process.exit(1);
     }
 
@@ -212,4 +226,5 @@ if (require.main === module) {
             .catch(() => process.exit(1));
     }
 }
+
 module.exports = { createInitialAdmin };
