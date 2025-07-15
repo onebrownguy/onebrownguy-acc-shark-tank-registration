@@ -1,286 +1,844 @@
-/* ****************************************
- * Nest Fest Participate API Handler
- * Handles participation interest form submissions with Google Sheets integration
- * 
- * @author Nest Fest Development Team
- * @version 1.0
- * @date July 2025
- * @note Integrates with "Participants" tab in Google Sheets
- * @note Sends confirmation emails via SendGrid
- ****************************************/
+<!DOCTYPE html>
+<html lang="en">
+<!-- ****************************************
+NEST FEST Participation Hub
+Central hub for all types of NEST FEST involvement opportunities
 
-import { google } from 'googleapis';
-import sgMail from '@sendgrid/mail';
-
-/* ****************************************
- * Initialize SendGrid with API key from environment
- ****************************************/
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-
-/* ****************************************
- * Main handler function for participation form submissions
- ****************************************/
-export default async function handler(req, res) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    const { fullName, email, involvementType, questions } = req.body;
-
-    // Validate required fields
-    if (!fullName || !email || !involvementType) {
-      return res.status(400).json({ error: 'Full name, email, and involvement type are required' });
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email format' });
-    }
-
-    // Validate involvement type
-    const validTypes = ['Entrepreneur', 'Mentor', 'Volunteer', 'Judge/Investor', 'Sponsor', 'Audience'];
-    if (!validTypes.includes(involvementType)) {
-      return res.status(400).json({ error: 'Invalid involvement type' });
-    }
-
-    // Google Sheets auth
-    const auth = new google.auth.GoogleAuth({
-      credentials: {
-        client_email: process.env.GOOGLE_CLIENT_EMAIL,
-        private_key: process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
-      },
-      scopes: ['https://www.googleapis.com/auth/spreadsheets'],
-    });
-    const sheets = google.sheets({ version: 'v4', auth });
-    const spreadsheetId = process.env.GOOGLE_SHEET_ID;
-
-    // Timestamp in Central Time
-    const timestamp = new Date().toLocaleString('en-US', {
-      timeZone: 'America/Chicago',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    });
-
-    // Prepare row values for Participants tab
-    const values = [[
-      timestamp,
-      fullName,
-      email,
-      involvementType,
-      questions || ''
-    ]];
-
-    // Check & write header row if Participants sheet is empty
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: 'Participants!A1:E1000',
-    });
-    if (!response.data.values || response.data.values.length === 0) {
-      // If empty, write header row to the Participants sheet
-      await sheets.spreadsheets.values.update({
-        spreadsheetId,
-        range: 'Participants!A1:E1',
-        valueInputOption: 'RAW',
-        requestBody: {
-          values: [
-            ['Timestamp', 'Full Name', 'Email', 'Involvement Type', 'Question/Notes']
-          ]
+@author NEST FEST Development Team
+@version 1.1
+@date July 2025
+@changelog v1.1 - Moved entrepreneur card to last position, removed highlight section, updated dropdown to include Media/Influencer option, standardized branding to "NEST FEST"
+@note Matches existing NEST FEST branding and integrates with Google Sheets
+@note Provides 6 different ways to get involved with the event
+********************************************-->
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Get Involved - NEST FEST</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-      });
-    }
 
-    // Append the new participation interest
-    await sheets.spreadsheets.values.append({
-      spreadsheetId,
-      range: 'Participants!A1',
-      valueInputOption: 'RAW',
-      insertDataOption: 'INSERT_ROWS',
-      requestBody: { values }
-    });
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
 
-    // Send confirmation email based on involvement type
-    try {
-      const emailContent = generateEmailContent(fullName, involvementType);
-      const confirmationEmail = {
-        to: email,
-        from: process.env.SENDGRID_SENDER_EMAIL,
-        subject: `Nest Fest ${involvementType} Interest Confirmed`,
-        html: emailContent
-      };
-      await sgMail.send(confirmationEmail);
-      console.log('Confirmation email sent to:', email);
-    } catch (emailError) {
-      console.error('Email failed:', emailError);
-      // Don't fail the entire request if email fails
-    }
+        /* Back button styles */
+        .back-button-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+        }
 
-    console.log('Successfully recorded participation interest:', {
-      fullName, email, involvementType, timestamp
-    });
+        .back-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #ffffff;
+            color: #2E1A47;
+            padding: 10px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
 
-    return res.status(200).json({
-      success: true,
-      message: 'Participation interest submitted successfully!'
-    });
+        .back-button:hover {
+            background: #f8f9fa;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateY(-1px);
+            color: #1F0F2E;
+            text-decoration: none;
+        }
 
-  } catch (error) {
-    console.error('Participation submission error:', error);
-    return res.status(500).json({
-      error: 'Internal server error. Please try again.',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-}
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideIn 0.8s ease-out;
+        }
 
-/* ****************************************
- * Generate personalized email content based on involvement type
- * @param {string} fullName - Participant's full name
- * @param {string} involvementType - Type of involvement selected
- * @returns {string} - HTML email content
- ****************************************/
-function generateEmailContent(fullName, involvementType) {
-  const baseContent = `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
-      <div style="background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%); color: white; padding: 40px 30px; text-align: center;">
-        <h1 style="margin: 0; font-size: 2rem;">Nest Fest</h1>
-        <p style="margin: 10px 0 0 0; font-size: 1.1rem; opacity: 0.9;">Thank you for your interest!</p>
-      </div>
-      <div style="padding: 40px 30px;">
-        <h2 style="color: #2E1A47; margin-bottom: 20px;">Hello ${fullName}!</h2>
-        <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-          Thank you for expressing interest in participating in Nest Fest as a <strong>${involvementType}</strong>.
-        </p>
-  `;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
 
-  const typeSpecificContent = {
-    'Entrepreneur': `
-      <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-        We're excited about your entrepreneurial journey! For entrepreneurs, we recommend using our 
-        <a href="${process.env.VERCEL_URL || 'https://your-site.vercel.app'}/index.html" style="color: #2E1A47; text-decoration: none; font-weight: bold;">dedicated registration form</a> 
-        which includes AI-powered submission guidance to help you craft the perfect business pitch.
-      </p>
-      <div style="background: #f8f6fc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <h3 style="color: #2E1A47; margin-bottom: 15px;">Next Steps for Entrepreneurs:</h3>
-        <ul style="color: #555; line-height: 1.8;">
-          <li>Complete the full entrepreneur registration form</li>
-          <li>Prepare your business pitch presentation</li>
-          <li>Practice your 5-minute pitch</li>
-          <li>Gather any supporting materials (business plan, prototypes, etc.)</li>
-        </ul>
-      </div>
-    `,
-    'Mentor': `
-      <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-        Your experience and guidance will be invaluable to aspiring entrepreneurs. We'll match you with 
-        entrepreneurs who can benefit most from your expertise.
-      </p>
-      <div style="background: #f8f6fc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <h3 style="color: #2E1A47; margin-bottom: 15px;">What to Expect as a Mentor:</h3>
-        <ul style="color: #555; line-height: 1.8;">
-          <li>One-on-one mentoring sessions with entrepreneurs</li>
-          <li>Group workshops and panels</li>
-          <li>Networking opportunities with other mentors</li>
-          <li>Recognition for your contribution to the entrepreneurial community</li>
-        </ul>
-      </div>
-    `,
-    'Volunteer': `
-      <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-        Volunteers are the backbone of Nest Fest! Your support helps create an amazing experience for 
-        all participants.
-      </p>
-      <div style="background: #f8f6fc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <h3 style="color: #2E1A47; margin-bottom: 15px;">Volunteer Opportunities:</h3>
-        <ul style="color: #555; line-height: 1.8;">
-          <li>Event setup and breakdown</li>
-          <li>Registration and check-in assistance</li>
-          <li>Technical support during presentations</li>
-          <li>Networking facilitation</li>
-          <li>General event support</li>
-        </ul>
-      </div>
-    `,
-    'Judge/Investor': `
-      <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-        As a judge or investor, you'll play a crucial role in evaluating business ideas and providing 
-        valuable feedback to entrepreneurs.
-      </p>
-      <div style="background: #f8f6fc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <h3 style="color: #2E1A47; margin-bottom: 15px;">Judge/Investor Responsibilities:</h3>
-        <ul style="color: #555; line-height: 1.8;">
-          <li>Evaluate entrepreneur presentations</li>
-          <li>Provide constructive feedback</li>
-          <li>Participate in Q&A sessions</li>
-          <li>Help select winners in various categories</li>
-          <li>Network with promising entrepreneurs</li>
-        </ul>
-      </div>
-    `,
-    'Sponsor': `
-      <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-        Thank you for considering sponsoring Nest Fest! Your support helps make this event possible 
-        and supports the next generation of entrepreneurs.
-      </p>
-      <div style="background: #f8f6fc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <h3 style="color: #2E1A47; margin-bottom: 15px;">Sponsorship Benefits:</h3>
-        <ul style="color: #555; line-height: 1.8;">
-          <li>Brand visibility and recognition</li>
-          <li>Access to emerging talent and startups</li>
-          <li>Networking with entrepreneurs and investors</li>
-          <li>Corporate social responsibility impact</li>
-          <li>Custom sponsorship packages available</li>
-        </ul>
-      </div>
-    `,
-    'Audience': `
-      <p style="color: #333; line-height: 1.6; margin-bottom: 20px;">
-        Great choice! Attending Nest Fest as an audience member is a fantastic way to see innovation 
-        in action and connect with the entrepreneurial community.
-      </p>
-      <div style="background: #f8f6fc; padding: 20px; border-radius: 10px; margin: 20px 0;">
-        <h3 style="color: #2E1A47; margin-bottom: 15px;">What You'll Experience:</h3>
-        <ul style="color: #555; line-height: 1.8;">
-          <li>Exciting entrepreneur pitch presentations</li>
-          <li>Networking opportunities</li>
-          <li>Learning from successful business leaders</li>
-          <li>Discovering innovative business ideas</li>
-          <li>Supporting local entrepreneurship</li>
-        </ul>
-      </div>
-    `
-  };
+        .header {
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
+            color: white;
+            padding: 60px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
 
-  const endContent = `
-        <p style="color: #333; line-height: 1.6; margin-bottom: 30px;">
-          We'll be in touch soon with more details about the event, including dates, location, and 
-          specific next steps for your role.
-        </p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="https://nest-fest.org/" style="background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: bold;">Visit Nest Fest Website</a>
-        </div>
-        <p style="color: #666; font-size: 0.9rem; margin-top: 30px;">
-          Questions? Reply to this email or contact us through our website.
-        </p>
-      </div>
-      <div style="background: #f8f9fa; padding: 20px; text-align: center; color: #666; font-size: 0.8rem;">
-        <p style="margin: 0;">© 2025 Nest Fest. Turning Ideas Into Reality.</p>
-      </div>
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="80" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="90" cy="10" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+            animation: float 20s infinite linear;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .content {
+            padding: 60px 30px;
+        }
+
+        .involvement-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 60px;
+        }
+
+        .involvement-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .involvement-card:hover {
+            border-color: #2E1A47;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(46, 26, 71, 0.15);
+        }
+
+        .entrepreneur-card:hover {
+            border-color: #2E1A47;
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(46, 26, 71, 0.25);
+            background: linear-gradient(135deg, #f8f6fc 0%, #e8f4f8 100%);
+        }
+
+        .entrepreneur-card .card-action .btn {
+            transition: all 0.3s ease;
+        }
+
+        .entrepreneur-card:hover .card-action .btn {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(46, 26, 71, 0.3);
+        }
+
+        .involvement-card.selected {
+            border-color: #2E1A47;
+            background: #f8f6fc;
+        }
+
+        .card-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            transition: all 0.3s ease;
+        }
+
+        .involvement-card:hover .card-icon {
+            transform: scale(1.1);
+        }
+
+        .card-icon svg {
+            width: 40px;
+            height: 40px;
+            fill: white;
+        }
+
+        .involvement-card h3 {
+            color: #2E1A47;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        .involvement-card p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .card-features {
+            list-style: none;
+            text-align: left;
+        }
+
+        .card-features li {
+            color: #555;
+            margin-bottom: 8px;
+            position: relative;
+            padding-left: 20px;
+        }
+
+        .card-features li::before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #2E1A47;
+            font-weight: bold;
+        }
+
+        .form-section {
+            background: #f8f6fc;
+            border-radius: 15px;
+            padding: 40px;
+            margin-top: 40px;
+        }
+
+        .form-section h2 {
+            color: #2E1A47;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-section .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+            font-size: 1rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2E1A47;
+            box-shadow: 0 0 0 3px rgba(46, 26, 71, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .required::after {
+            content: '*';
+            color: #e74c3c;
+            margin-left: 5px;
+        }
+
+        .error {
+            color: #e74c3c;
+            font-size: 0.9rem;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(46, 26, 71, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2E1A47;
+            border: 2px solid #2E1A47;
+        }
+
+        .btn-secondary:hover {
+            background: #2E1A47;
+            color: white;
+            text-decoration: none;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 18px;
+            margin-top: 20px;
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2E1A47;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .success-message {
+            display: none;
+            background: #d4edda;
+            border: 2px solid #c3e6cb;
+            color: #155724;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .success-message.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 40px;
+        }
+
+        .highlight-section {
+            background: linear-gradient(135deg, #f8f6fc 0%, #e8f4f8 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+            border: 2px solid #2E1A47;
+        }
+
+        .highlight-section h3 {
+            color: #2E1A47;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        @media (max-width: 768px) {
+            .back-button-container {
+                top: 15px;
+                left: 15px;
+            }
+            
+            .header {
+                padding: 40px 20px;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .content {
+                padding: 40px 20px;
+            }
+            
+            .involvement-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .involvement-card {
+                padding: 25px;
+            }
+            
+            .form-section {
+                padding: 30px 20px;
+            }
+            
+            .action-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .btn {
+                width: 100%;
+                max-width: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Back to NEST FEST Button -->
+    <div class="back-button-container">
+        <a href="https://nest-fest.org/" class="back-button">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
+            </svg>
+            Back to NEST FEST
+        </a>
     </div>
-  `;
 
-  return baseContent + (typeSpecificContent[involvementType] || '') + endContent;
-}
+    <div class="container">
+        <div class="header">
+            <h1>Get Involved</h1>
+            <p>Join NEST FEST as an entrepreneur, mentor, volunteer, judge, sponsor, or audience member. Every role is essential to making this event extraordinary.</p>
+        </div>
+
+        <div class="content">
+            <!-- Involvement Options -->
+            <div class="involvement-grid">
+                <!-- Mentor Card -->
+                <div class="involvement-card" data-type="Mentor">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                            <circle cx="9" cy="7" r="4"/>
+                            <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                            <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                    </div>
+                    <h3>Mentor</h3>
+                    <p>Guide and support entrepreneurs with your expertise and experience.</p>
+                    <ul class="card-features">
+                        <li>Share your expertise</li>
+                        <li>Help entrepreneurs refine ideas</li>
+                        <li>One-on-one mentoring sessions</li>
+                        <li>Build meaningful connections</li>
+                        <li>Give back to the community</li>
+                    </ul>
+                </div>
+
+                <!-- Volunteer Card -->
+                <div class="involvement-card" data-type="Volunteer">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                        </svg>
+                    </div>
+                    <h3>Volunteer</h3>
+                    <p>Help make NEST FEST run smoothly and be part of the action behind the scenes.</p>
+                    <ul class="card-features">
+                        <li>Event setup and coordination</li>
+                        <li>Registration assistance</li>
+                        <li>Technical support</li>
+                        <li>Networking facilitation</li>
+                        <li>Community service hours</li>
+                    </ul>
+                </div>
+
+                <!-- Judge/Investor Card -->
+                <div class="involvement-card" data-type="Judge/Investor">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <path d="M21 15l-5-5L5 21"/>
+                        </svg>
+                    </div>
+                    <h3>Judge/Investor</h3>
+                    <p>Evaluate business pitches and provide valuable feedback to entrepreneurs.</p>
+                    <ul class="card-features">
+                        <li>Evaluate business presentations</li>
+                        <li>Provide expert feedback</li>
+                        <li>Discover investment opportunities</li>
+                        <li>Network with entrepreneurs</li>
+                        <li>Shape the future of business</li>
+                    </ul>
+                </div>
+
+                <!-- Sponsor Card -->
+                <div class="involvement-card" data-type="Sponsor">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="12" y1="1" x2="12" y2="23"/>
+                            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                        </svg>
+                    </div>
+                    <h3>Sponsor</h3>
+                    <p>Support the next generation of entrepreneurs and get valuable brand exposure.</p>
+                    <ul class="card-features">
+                        <li>Brand visibility and recognition</li>
+                        <li>Access to emerging talent</li>
+                        <li>Community impact</li>
+                        <li>Networking opportunities</li>
+                        <li>Corporate social responsibility</li>
+                    </ul>
+                </div>
+
+                <!-- Audience Card -->
+                <div class="involvement-card" data-type="Audience">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </div>
+                    <h3>Audience Member</h3>
+                    <p>Witness innovative pitches and be inspired by entrepreneurial creativity.</p>
+                    <ul class="card-features">
+                        <li>Watch exciting pitch presentations</li>
+                        <li>Learn from successful entrepreneurs</li>
+                        <li>Network with like-minded individuals</li>
+                        <li>Discover new business ideas</li>
+                        <li>Support local innovation</li>
+                    </ul>
+                </div>
+
+                <!-- Entrepreneur Card - Clickable to Registration (Now Last) -->
+                <a href="/index.html" class="involvement-card entrepreneur-card" style="text-decoration: none; color: inherit;">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <h3>Entrepreneur</h3>
+                    <p>Present your business idea to a panel of experienced judges and investors.</p>
+                    <ul class="card-features">
+                        <li>Pitch your business idea</li>
+                        <li>Get expert feedback</li>
+                        <li>Potential funding opportunities</li>
+                        <li>Networking with investors</li>
+                        <li>Media exposure</li>
+                    </ul>
+                    <div class="card-action">
+                        <div class="btn btn-primary" style="margin-top: 15px; width: 100%;">
+                            Register Now
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Interest Form -->
+            <div class="form-section">
+                <h2>Express Your Interest</h2>
+                <p class="subtitle">Let us know how you'd like to get involved with NEST FEST. We'll keep you updated with relevant opportunities and event details.</p>
+
+                <form id="participateForm">
+                    <div class="form-group">
+                        <label for="fullName" class="required">Full Name</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                        <div class="error" id="fullNameError">Please enter your full name</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="required">Email Address</label>
+                        <input type="email" id="email" name="email" required>
+                        <div class="error" id="emailError">Please enter a valid email address</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="involvementType" class="required">How would you like to get involved?</label>
+                        <select id="involvementType" name="involvementType" required>
+                            <option value="">Select your involvement type</option>
+                            <option value="Media/Influencer">Media/Influencer - interested in covering/marketing the event</option>
+                            <option value="Mentor">Mentor - Guide entrepreneurs</option>
+                            <option value="Volunteer">Volunteer - Help with event operations</option>
+                            <option value="Judge/Investor">Judge/Investor - Evaluate pitches</option>
+                            <option value="Sponsor">Sponsor - Support the event</option>
+                            <option value="Audience">Audience Member - Attend and network</option>
+                        </select>
+                        <div class="error" id="involvementTypeError">Please select how you'd like to get involved</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="questions">Questions or Additional Information</label>
+                        <textarea id="questions" name="questions" placeholder="Tell us about your background, experience, specific interests, or any questions you have about getting involved..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary submit-btn" id="submitBtn">
+                        Submit Interest
+                    </button>
+                </form>
+
+                <div class="loading" id="loadingState">
+                    <div class="spinner"></div>
+                    <p>Submitting your interest...</p>
+                </div>
+
+                <div class="success-message" id="successMessage">
+                    <h3>Thank You for Your Interest!</h3>
+                    <p>We've received your information and will be in touch with relevant opportunities and event updates.</p>
+                    <p><strong>What's next?</strong> Keep an eye on your email for updates about NEST FEST and how you can get involved!</p>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <a href="/index.html" class="btn btn-secondary">Entrepreneur Registration</a>
+                <a href="https://nest-fest.org/" class="btn btn-secondary">Back to Homepage</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /* ****************************************
+         * Sanitize user input to prevent XSS attacks
+         * @param (string|any) input : user input to sanitize
+         * @return (string|any) : sanitized input safe for DOM
+         ****************************************/
+        function sanitizeInput(input) {
+            if (typeof input !== 'string') return input;
+            return DOMPurify.sanitize(input.trim());
+        }
+
+        /* ****************************************
+         * Handle involvement card selection (skip entrepreneur card)
+         ****************************************/
+        document.querySelectorAll('.involvement-card:not(.entrepreneur-card)').forEach(card => {
+            card.addEventListener('click', function() {
+                // Remove selected class from all cards except entrepreneur
+                document.querySelectorAll('.involvement-card:not(.entrepreneur-card)').forEach(c => c.classList.remove('selected'));
+                
+                // Add selected class to clicked card
+                this.classList.add('selected');
+                
+                // Update the dropdown to match selection
+                const type = this.dataset.type;
+                const select = document.getElementById('involvementType');
+                select.value = type;
+                
+                // Scroll to form
+                document.getElementById('participateForm').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            });
+        });
+
+        /* ****************************************
+         * Handle dropdown selection updates (exclude entrepreneur card)
+         ****************************************/
+        document.getElementById('involvementType').addEventListener('change', function() {
+            // Remove selected class from all cards except entrepreneur
+            document.querySelectorAll('.involvement-card:not(.entrepreneur-card)').forEach(c => c.classList.remove('selected'));
+            
+            // Add selected class to matching card (if not entrepreneur)
+            if (this.value !== 'Entrepreneur') {
+                const selectedCard = document.querySelector(`[data-type="${this.value}"]`);
+                if (selectedCard) {
+                    selectedCard.classList.add('selected');
+                }
+            }
+        });
+
+        /* ****************************************
+         * Validate form fields
+         * @return (bool) : true if all validation passes
+         ****************************************/
+        function validateForm() {
+            let isValid = true;
+            const requiredFields = ['fullName', 'email', 'involvementType'];
+            
+            requiredFields.forEach(field => {
+                const input = document.getElementById(field);
+                const error = document.getElementById(field + 'Error');
+                
+                if (!input.value.trim()) {
+                    error.style.display = 'block';
+                    input.style.borderColor = '#e74c3c';
+                    isValid = false;
+                } else {
+                    error.style.display = 'none';
+                    input.style.borderColor = '#e0e0e0';
+                }
+            });
+
+            // Email validation
+            const email = document.getElementById('email');
+            const emailError = document.getElementById('emailError');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            
+            if (email.value.trim() && !emailRegex.test(email.value.trim())) {
+                emailError.textContent = 'Please enter a valid email address';
+                emailError.style.display = 'block';
+                email.style.borderColor = '#e74c3c';
+                isValid = false;
+            }
+
+            return isValid;
+        }
+
+        /* ****************************************
+         * Handle form submission
+         ****************************************/
+        document.getElementById('participateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            if (!validateForm()) {
+                return;
+            }
+
+            const formData = {
+                fullName: sanitizeInput(document.getElementById('fullName').value),
+                email: sanitizeInput(document.getElementById('email').value),
+                involvementType: document.getElementById('involvementType').value,
+                questions: sanitizeInput(document.getElementById('questions').value),
+                timestamp: new Date().toISOString()
+            };
+
+            // Show loading state
+            document.getElementById('loadingState').classList.add('active');
+            document.getElementById('submitBtn').disabled = true;
+
+            // Submit to API
+            fetch('/api/participate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Success:', data);
+                showSuccess();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                document.getElementById('loadingState').classList.remove('active');
+                document.getElementById('submitBtn').disabled = false;
+                alert('Submission failed. Please try again. Error: ' + error.message);
+            });
+        });
+
+        /* ****************************************
+         * Show success message
+         ****************************************/
+        function showSuccess() {
+            document.getElementById('loadingState').classList.remove('active');
+            document.getElementById('successMessage').classList.add('active');
+            document.getElementById('participateForm').style.display = 'none';
+            
+            // Scroll to success message
+            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /* ****************************************
+         * Real-time validation
+         ****************************************/
+        document.querySelectorAll('input, select, textarea').forEach(input => {
+            input.addEventListener('blur', function() {
+                const errorElement = document.getElementById(this.id + 'Error');
+                if (errorElement) {
+                    if (this.value.trim()) {
+                        errorElement.style.display = 'none';
+                        this.style.borderColor = '#e0e0e0';
+                    }
+                }
+            });
+        });
+
+        /* ****************************************
+         * Email validation on blur
+         ****************************************/
+        document.getElementById('email').addEventListener('blur', function() {
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            const errorElement = document.getElementById('emailError');
+            
+            if (this.value.trim() && !emailRegex.test(this.value.trim())) {
+                errorElement.style.display = 'block';
+                this.style.borderColor = '#e74c3c';
+            } else if (this.value.trim()) {
+                errorElement.style.display = 'none';
+                this.style.borderColor = '#e0e0e0';
+            }
+        });
+    </script>
+</body>
+</html>

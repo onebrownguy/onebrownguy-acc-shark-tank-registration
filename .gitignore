@@ -8,6 +8,7 @@
 !index.html
 !login.html
 !participate.html
+!quick-builder.html
 !admin/
 !admin/dashboard.html
 !api/
@@ -16,6 +17,7 @@
 !api/session.js
 !api/submissions.js
 !api/participate.js
+!api/claude-generate.js
 !lib/
 !lib/auth.js
 !lib/sheets.js
@@ -26,3 +28,4 @@
 !package-lock.json
 !.gitignore
 !README.md
+!.env.example

@@ -1,21 +1,22 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- ****************************************
-ACC Shark Tank Registration Form
-A modern, AI-enhanced registration system for Austin Community College's
-premier entrepreneurship event with Google Sheets integration and email confirmation.
+NEST FEST AI-Enhanced Registration Form
+A modern, Claude AI-integrated registration system for NEST FEST's
+premier entrepreneurship event with real-time content generation.
 
-@author ACC Development Team
-@version 2.0
+@author NEST FEST Development Team
+@version 3.0
 @date July 2025
-@note This form includes XSS protection, input validation, and SendGrid email integration
-@note Uses DOMPurify for security and professional ACC branding
-@note Implements 3-question AI submission guide for streamlined user experience
+@changelog v3.0 - Added Claude API integration for real-time AI content generation
+@note This form includes XSS protection, input validation, and Claude AI assistance
+@note Uses DOMPurify for security and professional NEST FEST branding
+@note Implements Claude API calls for last-minute presentation content generation
 ********************************************-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEST FEST - Registration</title>
+    <title>NEST FEST - AI-Enhanced Registration</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
     <style>
         * {
@@ -128,6 +129,17 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             z-index: 1;
         }
 
+        .ai-badge {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: inline-block;
+            backdrop-filter: blur(10px);
+        }
+
         .form-container {
             padding: 40px 30px;
         }
@@ -167,7 +179,7 @@ premier entrepreneurship event with Google Sheets integration and email confirma
 
         .form-group textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
         }
 
         .required::after {
@@ -184,8 +196,8 @@ premier entrepreneurship event with Google Sheets integration and email confirma
         }
 
         .ai-toggle-container {
-            background: #f8f9fa;
-            border: 2px solid #e0e0e0;
+            background: linear-gradient(135deg, #f8f6fc 0%, #e8f4f8 100%);
+            border: 2px solid #2E1A47;
             border-radius: 15px;
             padding: 20px;
             margin-bottom: 25px;
@@ -250,7 +262,7 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             }
             to {
                 opacity: 1;
-                max-height: 1000px;
+                max-height: 2000px;
             }
         }
 
@@ -279,6 +291,7 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             display: flex;
             gap: 10px;
             margin-top: 15px;
+            flex-wrap: wrap;
         }
 
         .btn {
@@ -323,6 +336,22 @@ premier entrepreneurship event with Google Sheets integration and email confirma
         .btn-outline:hover {
             background: #2E1A47;
             color: white;
+        }
+
+        .btn-ai {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-ai:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
 
         .submit-btn {
@@ -377,6 +406,29 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             100% { transform: rotate(360deg); }
         }
 
+        .ai-loading {
+            display: none;
+            text-align: center;
+            padding: 15px;
+            background: #f8f6fc;
+            border-radius: 10px;
+            margin: 15px 0;
+        }
+
+        .ai-loading.active {
+            display: block;
+        }
+
+        .ai-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+
         .success-message {
             display: none;
             background: #d4edda;
@@ -421,8 +473,9 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             white-space: pre-wrap;
             word-wrap: break-word;
             min-height: 100px;
-            max-height: none;
+            max-height: 400px;
             overflow-y: auto;
+            border: 1px solid #e0e0e0;
         }
 
         .info-box {
@@ -441,6 +494,25 @@ premier entrepreneurship event with Google Sheets integration and email confirma
         .info-box p {
             color: #666;
             line-height: 1.5;
+        }
+
+        .ai-feature-highlight {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 25px;
+            text-align: center;
+        }
+
+        .ai-feature-highlight h3 {
+            margin-bottom: 10px;
+            font-size: 1.3rem;
+        }
+
+        .ai-feature-highlight p {
+            opacity: 0.9;
+            font-size: 0.95rem;
         }
 
         @media (max-width: 768px) {
@@ -474,6 +546,10 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             .ai-buttons {
                 flex-direction: column;
             }
+
+            .btn {
+                width: 100%;
+            }
         }
     </style>
 </head>
@@ -492,9 +568,15 @@ premier entrepreneurship event with Google Sheets integration and email confirma
         <div class="header">
             <h1>NEST FEST</h1>
             <p>Turn Your Business Ideas Into Reality</p>
+            <div class="ai-badge">🤖 AI-Enhanced Registration</div>
         </div>
 
         <div class="form-container">
+            <div class="ai-feature-highlight">
+                <h3>🚀 Last-Minute AI Assistance</h3>
+                <p>Need help creating your business description fast? Our Claude AI assistant can generate professional content for your presentation in real-time!</p>
+            </div>
+
             <div class="info-box">
                 <h3>About the Event</h3>
                 <p>Join NEST FEST's premier entrepreneurship event! Present your idea, big or small, to go through a round of selection to move onto the next round and be invited to the pitch event. Selected participants will present to a panel of successful entrepreneurs and investors for feedback, mentorship, and potential funding opportunities.</p>
@@ -543,18 +625,18 @@ premier entrepreneurship event with Google Sheets integration and email confirma
                     <div class="ai-toggle-container">
                         <div class="ai-toggle">
                             <div class="toggle-switch" id="aiToggle"></div>
-                            <span><strong>Want us to help you format a submission?</strong></span>
+                            <span><strong>Get AI-Powered Content Generation</strong></span>
                         </div>
-                        <p style="color: #666; font-size: 0.9rem;">Get guided help to create a compelling business description for your NEST FEST submission.</p>
+                        <p style="color: #666; font-size: 0.9rem;">Let Claude AI help you create a compelling business description and presentation materials in seconds.</p>
                     </div>
 
                     <div class="ai-assistant" id="aiAssistant">
-                        <h3 style="color: #003366; margin-bottom: 20px;">Submission Guide</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Answer these questions to build a strong business description that will impress our panel of investors.</p>
+                        <h3 style="color: #2E1A47; margin-bottom: 20px;">🤖 Claude AI Content Generator</h3>
+                        <p style="color: #666; margin-bottom: 20px;">Answer these questions and Claude will generate professional content for your NEST FEST submission.</p>
                         
                         <div class="ai-question active" id="question1">
                             <h4>1. What's your business concept?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Explain what your business does in 2-3 sentences. Think elevator pitch.</p>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Briefly describe what your business does (2-3 sentences).</p>
                             <textarea id="concept" placeholder="Example: We create affordable smart home devices that help seniors live independently by monitoring their daily activities and alerting family members if something seems wrong."></textarea>
                             <div class="ai-buttons">
                                 <button type="button" class="btn btn-primary" onclick="nextQuestion(2)">Next</button>
@@ -563,7 +645,7 @@ premier entrepreneurship event with Google Sheets integration and email confirma
 
                         <div class="ai-question" id="question2">
                             <h4>2. What problem are you solving?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Describe the specific pain point or challenge your business addresses. Make it relatable.</p>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Describe the specific pain point your business addresses.</p>
                             <textarea id="problem" placeholder="Example: Many seniors want to age in place but their families worry about their safety. Current monitoring systems are expensive and invasive, creating a gap in affordable, dignified care solutions."></textarea>
                             <div class="ai-buttons">
                                 <button type="button" class="btn btn-outline" onclick="nextQuestion(1)">Back</button>
@@ -573,22 +655,28 @@ premier entrepreneurship event with Google Sheets integration and email confirma
 
                         <div class="ai-question" id="question3">
                             <h4>3. What do you need to succeed?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Be specific about funding, mentorship, partnerships, or other resources you're seeking.</p>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">What funding, mentorship, or resources are you seeking?</p>
                             <textarea id="needs" placeholder="Example: We're seeking $100K in funding to hire 2 developers and scale production. We also need mentorship in healthcare regulations and partnerships with senior living communities."></textarea>
                             <div class="ai-buttons">
                                 <button type="button" class="btn btn-outline" onclick="nextQuestion(2)">Back</button>
-                                <button type="button" class="btn btn-primary" onclick="generateDescription()">Generate Description</button>
+                                <button type="button" class="btn btn-ai" onclick="generateWithClaude()" id="generateBtn">🤖 Generate with Claude AI</button>
                             </div>
                         </div>
 
+                        <div class="ai-loading" id="aiLoading">
+                            <div class="ai-spinner"></div>
+                            <p>Claude AI is generating your content...</p>
+                        </div>
+
                         <div class="ai-suggestion" id="aiSuggestion">
-                            <h4>Your NEST FEST Business Description</h4>
-                            <p style="color: #666; margin-bottom: 15px;">Here's your professional business description based on your answers:</p>
+                            <h4>🎯 Your AI-Generated Business Description</h4>
+                            <p style="color: #666; margin-bottom: 15px;">Claude AI has created this professional business description based on your answers:</p>
                             <div class="ai-suggestion-text" id="suggestionText"></div>
                             <div class="ai-buttons">
                                 <button type="button" class="btn btn-primary" onclick="acceptSuggestion()">Use This Description</button>
                                 <button type="button" class="btn btn-outline" onclick="editSuggestion()">Copy & Edit</button>
                                 <button type="button" class="btn btn-secondary" onclick="restartAI()">Start Over</button>
+                                <button type="button" class="btn btn-ai" onclick="regenerateContent()">🔄 Regenerate</button>
                             </div>
                         </div>
                     </div>
@@ -618,10 +706,6 @@ premier entrepreneurship event with Google Sheets integration and email confirma
     <script>
         /* ****************************************
          * Sanitize user input to prevent XSS attacks
-         * @param (string|any) input : user input to sanitize
-         * @return (string|any) : sanitized input safe for DOM
-         * @note Uses DOMPurify library for XSS prevention
-         * @note Returns input unchanged if not string type
          ****************************************/
         function sanitizeInput(input) {
             if (typeof input !== 'string') return input;
@@ -630,10 +714,6 @@ premier entrepreneurship event with Google Sheets integration and email confirma
 
         /* ****************************************
          * Validate all required form fields and email format
-         * @param na : uses global form elements
-         * @return (bool) : true if all validation passes, false otherwise
-         * @note Displays error messages and highlights invalid fields
-         * @note Validates email format using regex pattern
          ****************************************/
         function validateForm() {
             let isValid = true;
@@ -653,7 +733,7 @@ premier entrepreneurship event with Google Sheets integration and email confirma
                 }
             });
 
-            // Email validation using regex pattern
+            // Email validation
             const email = document.getElementById('email');
             const emailError = document.getElementById('emailError');
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -676,10 +756,6 @@ premier entrepreneurship event with Google Sheets integration and email confirma
 
         /* ****************************************
          * Initialize AI assistant toggle functionality
-         * @param na : uses global DOM elements
-         * @return na : void function
-         * @note Sets up click event listener for AI toggle switch
-         * @note Toggles AI assistant visibility and resets to first question
          ****************************************/
         aiToggle.addEventListener('click', function() {
             aiEnabled = !aiEnabled;
@@ -693,10 +769,6 @@ premier entrepreneurship event with Google Sheets integration and email confirma
 
         /* ****************************************
          * Navigate between AI assistant questions
-         * @param (int) questionNum : question number to display (1-3)
-         * @return na : void function
-         * @note Hides all questions then shows specified question
-         * @note Updates global currentQuestion variable
          ****************************************/
         function showQuestion(questionNum) {
             document.querySelectorAll('.ai-question').forEach(q => q.classList.remove('active'));
@@ -704,73 +776,108 @@ premier entrepreneurship event with Google Sheets integration and email confirma
             currentQuestion = questionNum;
         }
 
-        /* ****************************************
-         * Move to next question in AI assistant flow
-         * @param (int) questionNum : next question number to show
-         * @return na : void function
-         * @note Wrapper function that calls showQuestion for navigation
-         ****************************************/
         function nextQuestion(questionNum) {
             showQuestion(questionNum);
         }
 
         /* ****************************************
-         * Generate business description from AI assistant answers
-         * @param na : uses values from AI question form fields
-         * @return na : void function, displays generated description
-         * @note Validates all 3 questions are completed before generating
-         * @note Creates formatted business description and displays in suggestion box
-         * @note Scrolls to suggestion for better user experience
+         * Call Claude API to generate business description
          ****************************************/
-        function generateDescription() {
+        async function generateWithClaude() {
             const concept = sanitizeInput(document.getElementById('concept').value);
             const problem = sanitizeInput(document.getElementById('problem').value);
             const needs = sanitizeInput(document.getElementById('needs').value);
 
-            console.log('Concept:', concept);
-            console.log('Problem:', problem);
-            console.log('Needs:', needs);
-
             if (!concept || !problem || !needs) {
-                console.log('Missing fields detected');
                 alert('Please complete all questions to generate your business description.');
                 return;
             }
 
-            const description = `${concept}
+            // Show loading state
+            document.getElementById('aiLoading').classList.add('active');
+            document.getElementById('generateBtn').disabled = true;
 
-THE PROBLEM: ${problem}
+            try {
+                const response = await fetch('/api/claude-generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        concept: concept,
+                        problem: problem,
+                        needs: needs,
+                        type: 'business_description'
+                    })
+                });
 
-WHAT WE'RE SEEKING: ${needs}
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
 
-This represents a significant opportunity to make a meaningful impact while building a sustainable and profitable business.`;
-
-            console.log('Generated description length:', description.length);
-            
-            const suggestionElement = document.getElementById('suggestionText');
-            const aiSuggestionElement = document.getElementById('aiSuggestion');
-            
-            console.log('Suggestion element found:', !!suggestionElement);
-            console.log('AI suggestion element found:', !!aiSuggestionElement);
-            
-            if (suggestionElement && aiSuggestionElement) {
-                suggestionElement.textContent = description;
-                aiSuggestionElement.classList.add('active');
-                console.log('Description applied successfully');
+                const data = await response.json();
                 
-                // Scroll to the suggestion for better UX
-                aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
-            } else {
-                console.error('Could not find suggestion elements');
+                // Hide loading and show result
+                document.getElementById('aiLoading').classList.remove('active');
+                document.getElementById('generateBtn').disabled = false;
+                
+                // Display the generated content
+                const suggestionElement = document.getElementById('suggestionText');
+                const aiSuggestionElement = document.getElementById('aiSuggestion');
+                
+                if (suggestionElement && aiSuggestionElement) {
+                    suggestionElement.textContent = data.content;
+                    aiSuggestionElement.classList.add('active');
+                    
+                    // Scroll to the suggestion
+                    aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
+                }
+
+            } catch (error) {
+                console.error('Error calling Claude API:', error);
+                document.getElementById('aiLoading').classList.remove('active');
+                document.getElementById('generateBtn').disabled = false;
+                
+                // Fallback to local generation
+                generateFallbackDescription();
             }
         }
 
         /* ****************************************
+         * Fallback content generation if Claude API fails
+         ****************************************/
+        function generateFallbackDescription() {
+            const concept = sanitizeInput(document.getElementById('concept').value);
+            const problem = sanitizeInput(document.getElementById('problem').value);
+            const needs = sanitizeInput(document.getElementById('needs').value);
+
+            const description = `BUSINESS CONCEPT: ${concept}
+
+THE PROBLEM WE'RE SOLVING: ${problem}
+
+WHAT WE'RE SEEKING: ${needs}
+
+This represents a significant opportunity to make a meaningful impact while building a sustainable and profitable business. Our team is committed to delivering innovative solutions that address real market needs and create value for all stakeholders.`;
+
+            const suggestionElement = document.getElementById('suggestionText');
+            const aiSuggestionElement = document.getElementById('aiSuggestion');
+            
+            if (suggestionElement && aiSuggestionElement) {
+                suggestionElement.textContent = description;
+                aiSuggestionElement.classList.add('active');
+                aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
+            }
+        }
+
+        /* ****************************************
+         * Regenerate content with Claude API
+         ****************************************/
+        async function regenerateContent() {
+            await generateWithClaude();
+        }
+
+        /* ****************************************
          * Copy AI-generated description to main form field
-         * @param na : uses generated description from suggestion box
-         * @return na : void function
-         * @note Closes AI assistant and scrolls to business description field
-         * @note Resets AI enabled state and toggle appearance
          ****************************************/
         function acceptSuggestion() {
             const suggestion = document.getElementById('suggestionText').textContent;
@@ -785,9 +892,6 @@ This represents a significant opportunity to make a meaningful impact while buil
 
         /* ****************************************
          * Copy AI suggestion to main form for manual editing
-         * @param na : uses generated description from suggestion box
-         * @return na : void function
-         * @note Focuses cursor on business description field for immediate editing
          ****************************************/
         function editSuggestion() {
             const suggestion = document.getElementById('suggestionText').textContent;
@@ -797,10 +901,6 @@ This represents a significant opportunity to make a meaningful impact while buil
 
         /* ****************************************
          * Reset AI assistant to start over
-         * @param na : clears all AI form fields
-         * @return na : void function
-         * @note Clears all 3 question inputs and returns to first question
-         * @note Hides suggestion box and resets AI flow
          ****************************************/
         function restartAI() {
             document.getElementById('aiSuggestion').classList.remove('active');
@@ -812,11 +912,6 @@ This represents a significant opportunity to make a meaningful impact while buil
 
         /* ****************************************
          * Handle form submission with validation and API integration
-         * @param (Event) e : form submission event
-         * @return na : void function
-         * @note Prevents default form submission and handles via JavaScript
-         * @note Validates form, shows loading state, and submits to serverless function
-         * @note Integrates with Google Sheets and SendGrid email confirmation
          ****************************************/
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -831,14 +926,15 @@ This represents a significant opportunity to make a meaningful impact while buil
                 major: document.getElementById('major').value,
                 businessName: sanitizeInput(document.getElementById('businessName').value),
                 businessDescription: sanitizeInput(document.getElementById('businessDescription').value),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                aiAssisted: aiEnabled || document.getElementById('aiSuggestion').classList.contains('active')
             };
 
             // Show loading state and disable submit button
             document.getElementById('loadingState').classList.add('active');
             document.getElementById('submitBtn').disabled = true;
 
-            // Submit to Vercel serverless function
+            // Submit to API endpoint
             fetch('/api/submit', {
                 method: 'POST',
                 headers: {
@@ -866,10 +962,6 @@ This represents a significant opportunity to make a meaningful impact while buil
 
         /* ****************************************
          * Display success message after form submission
-         * @param na : modifies global UI elements
-         * @return na : void function
-         * @note Hides loading state and form, shows success message
-         * @note Scrolls to success message for user confirmation
          ****************************************/
         function showSuccess() {
             document.getElementById('loadingState').classList.remove('active');
@@ -882,10 +974,6 @@ This represents a significant opportunity to make a meaningful impact while buil
 
         /* ****************************************
          * Initialize real-time form validation
-         * @param na : uses all form input elements
-         * @return na : void function
-         * @note Sets up blur event listeners for immediate validation feedback
-         * @note Clears error states when valid input is entered
          ****************************************/
         document.querySelectorAll('input, select, textarea').forEach(input => {
             input.addEventListener('blur', function() {
@@ -901,10 +989,6 @@ This represents a significant opportunity to make a meaningful impact while buil
 
         /* ****************************************
          * Initialize email validation on field blur
-         * @param na : uses email input element
-         * @return na : void function
-         * @note Validates email format in real-time using regex
-         * @note Shows immediate feedback for invalid email addresses
          ****************************************/
         document.getElementById('email').addEventListener('blur', function() {
             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
