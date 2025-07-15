@@ -1,19 +1,20 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- ****************************************
-Nest Fest Participation Hub
-Central hub for all types of Nest Fest involvement opportunities
+NEST FEST Participation Hub
+Central hub for all types of NEST FEST involvement opportunities
 
-@author Nest Fest Development Team
-@version 1.0
+@author NEST FEST Development Team
+@version 1.1
 @date July 2025
-@note Matches existing Nest Fest branding and integrates with Google Sheets
+@changelog v1.1 - Moved entrepreneur card to last position, removed highlight section, updated dropdown to include Media/Influencer option, standardized branding to "NEST FEST"
+@note Matches existing NEST FEST branding and integrates with Google Sheets
 @note Provides 6 different ways to get involved with the event
 ********************************************-->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Get Involved - Nest Fest</title>
+    <title>Get Involved - NEST FEST</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
     <style>
         * {
@@ -458,48 +459,25 @@ Central hub for all types of Nest Fest involvement opportunities
     </style>
 </head>
 <body>
-    <!-- Back to Nest Fest Button -->
+    <!-- Back to NEST FEST Button -->
     <div class="back-button-container">
         <a href="https://nest-fest.org/" class="back-button">
             <svg width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                 <path fill-rule="evenodd" d="M15 8a.5.5 0 0 0-.5-.5H2.707l3.147-3.146a.5.5 0 1 0-.708-.708l-4 4a.5.5 0 0 0 0 .708l4 4a.5.5 0 0 0 .708-.708L2.707 8.5H14.5A.5.5 0 0 0 15 8z"/>
             </svg>
-            Back to Nest Fest
+            Back to NEST FEST
         </a>
     </div>
 
     <div class="container">
         <div class="header">
             <h1>Get Involved</h1>
-            <p>Join Nest Fest as an entrepreneur, mentor, volunteer, judge, sponsor, or audience member. Every role is essential to making this event extraordinary.</p>
+            <p>Join NEST FEST as an entrepreneur, mentor, volunteer, judge, sponsor, or audience member. Every role is essential to making this event extraordinary.</p>
         </div>
 
         <div class="content">
             <!-- Involvement Options -->
             <div class="involvement-grid">
-                <!-- Entrepreneur Card - Clickable to Registration -->
-                <a href="/index.html" class="involvement-card entrepreneur-card" style="text-decoration: none; color: inherit;">
-                    <div class="card-icon">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        </svg>
-                    </div>
-                    <h3>Entrepreneur</h3>
-                    <p>Present your business idea to a panel of experienced judges and investors.</p>
-                    <ul class="card-features">
-                        <li>Pitch your business idea</li>
-                        <li>Get expert feedback</li>
-                        <li>Potential funding opportunities</li>
-                        <li>Networking with investors</li>
-                        <li>Media exposure</li>
-                    </ul>
-                    <div class="card-action">
-                        <div class="btn btn-primary" style="margin-top: 15px; width: 100%;">
-                            Register Now
-                        </div>
-                    </div>
-                </a>
-
                 <!-- Mentor Card -->
                 <div class="involvement-card" data-type="Mentor">
                     <div class="card-icon">
@@ -529,7 +507,7 @@ Central hub for all types of Nest Fest involvement opportunities
                         </svg>
                     </div>
                     <h3>Volunteer</h3>
-                    <p>Help make Nest Fest run smoothly and be part of the action behind the scenes.</p>
+                    <p>Help make NEST FEST run smoothly and be part of the action behind the scenes.</p>
                     <ul class="card-features">
                         <li>Event setup and coordination</li>
                         <li>Registration assistance</li>
@@ -596,21 +574,35 @@ Central hub for all types of Nest Fest involvement opportunities
                         <li>Support local innovation</li>
                     </ul>
                 </div>
-            </div>
 
-            <!-- Special Entrepreneur Section -->
-            <div class="highlight-section">
-                <h3>Ready to Pitch Your Business Idea?</h3>
-                <p>If you're an entrepreneur with a business concept, use our dedicated registration form with AI-powered submission guidance.</p>
-                <div style="margin-top: 20px;">
-                    <a href="/index.html" class="btn btn-primary">Go to Entrepreneur Registration</a>
-                </div>
+                <!-- Entrepreneur Card - Clickable to Registration (Now Last) -->
+                <a href="/index.html" class="involvement-card entrepreneur-card" style="text-decoration: none; color: inherit;">
+                    <div class="card-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                        </svg>
+                    </div>
+                    <h3>Entrepreneur</h3>
+                    <p>Present your business idea to a panel of experienced judges and investors.</p>
+                    <ul class="card-features">
+                        <li>Pitch your business idea</li>
+                        <li>Get expert feedback</li>
+                        <li>Potential funding opportunities</li>
+                        <li>Networking with investors</li>
+                        <li>Media exposure</li>
+                    </ul>
+                    <div class="card-action">
+                        <div class="btn btn-primary" style="margin-top: 15px; width: 100%;">
+                            Register Now
+                        </div>
+                    </div>
+                </a>
             </div>
 
             <!-- Interest Form -->
             <div class="form-section">
                 <h2>Express Your Interest</h2>
-                <p class="subtitle">Let us know how you'd like to get involved with Nest Fest. We'll keep you updated with relevant opportunities and event details.</p>
+                <p class="subtitle">Let us know how you'd like to get involved with NEST FEST. We'll keep you updated with relevant opportunities and event details.</p>
 
                 <form id="participateForm">
                     <div class="form-group">
@@ -629,7 +621,7 @@ Central hub for all types of Nest Fest involvement opportunities
                         <label for="involvementType" class="required">How would you like to get involved?</label>
                         <select id="involvementType" name="involvementType" required>
                             <option value="">Select your involvement type</option>
-                            <option value="Entrepreneur">Entrepreneur - Pitch my business idea</option>
+                            <option value="Media/Influencer">Media/Influencer - interested in covering/marketing the event</option>
                             <option value="Mentor">Mentor - Guide entrepreneurs</option>
                             <option value="Volunteer">Volunteer - Help with event operations</option>
                             <option value="Judge/Investor">Judge/Investor - Evaluate pitches</option>
@@ -657,7 +649,7 @@ Central hub for all types of Nest Fest involvement opportunities
                 <div class="success-message" id="successMessage">
                     <h3>Thank You for Your Interest!</h3>
                     <p>We've received your information and will be in touch with relevant opportunities and event updates.</p>
-                    <p><strong>What's next?</strong> Keep an eye on your email for updates about Nest Fest and how you can get involved!</p>
+                    <p><strong>What's next?</strong> Keep an eye on your email for updates about NEST FEST and how you can get involved!</p>
                 </div>
             </div>
 
