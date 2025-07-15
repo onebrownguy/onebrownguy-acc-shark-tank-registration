@@ -28,4 +28,8 @@
 !package-lock.json
 !.gitignore
 !README.md
+<<<<<<< HEAD
 !.env.example
+=======
+!.env.example          
+>>>>>>> ab311cfbdbb86ad6d2f013086274fc672004390b
