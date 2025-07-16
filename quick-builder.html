@@ -19,6 +19,18 @@ premier entrepreneurship event with real-time content generation.
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEST FEST - AI-Enhanced Registration</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
+    <script>
+        // Wait for DOMPurify to load before proceeding
+        function waitForDOMPurify() {
+            return new Promise((resolve) => {
+                if (typeof DOMPurify !== 'undefined') {
+                    resolve();
+                } else {
+                    setTimeout(() => waitForDOMPurify().then(resolve), 100);
+                }
+            });
+        }
+    </script>
     <style>
         * {
             margin: 0;
@@ -710,7 +722,18 @@ premier entrepreneurship event with real-time content generation.
          ****************************************/
         function sanitizeInput(input) {
             if (typeof input !== 'string') return input;
-            return DOMPurify.sanitize(input.trim());
+            
+            // Check if DOMPurify is available
+            if (typeof DOMPurify !== 'undefined') {
+                return DOMPurify.sanitize(input.trim());
+            } else {
+                // Fallback sanitization if DOMPurify isn't loaded
+                console.warn('DOMPurify not loaded, using basic sanitization');
+                return input.trim()
+                    .replace(/[<>]/g, '') // Remove basic HTML tags
+                    .replace(/javascript:/gi, '') // Remove javascript: protocol
+                    .replace(/on\w+=/gi, ''); // Remove event handlers
+            }
         }
 
         /* ****************************************
@@ -785,6 +808,9 @@ premier entrepreneurship event with real-time content generation.
          * Call Claude API to generate business description
          ****************************************/
         async function generateWithClaude() {
+            // Wait for DOMPurify to be available
+            await waitForDOMPurify();
+            
             const concept = sanitizeInput(document.getElementById('concept').value);
             const problem = sanitizeInput(document.getElementById('problem').value);
             const needs = sanitizeInput(document.getElementById('needs').value);
