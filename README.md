@@ -8,7 +8,7 @@ A modern, AI-enhanced registration form for Austin Community College's entrepren
 
 ## Features
 
-- **AI-Powered Submission Guide** - Helps students craft compelling business descriptions
+- **AI-Powered Submission Guide** - Helps students craft compelling business descriptions with Claude AI
 - **Real-time Form Validation** - Instant feedback with XSS protection
 - **Google Sheets Integration** - Automatic data collection and storage
 - **Responsive Design** - Mobile-friendly Austin Community College branding
