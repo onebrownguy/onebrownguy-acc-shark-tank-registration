@@ -343,18 +343,22 @@ function generatePlaceholderContent(inputType) {
 }
 
 function generateIntelligentSolution(concept, problem) {
+    // Parse the concept to understand what they're actually building
     const conceptLower = concept.toLowerCase();
+    const businessType = identifyBusinessType(conceptLower);
+    const keyWords = extractKeyWords(conceptLower);
     
-    if (conceptLower.includes('app') || conceptLower.includes('digital') || conceptLower.includes('platform') || conceptLower.includes('software')) {
-        return `We are developing a cutting-edge digital platform that directly addresses ${problem}. Our solution leverages modern technology, user-centered design, and data analytics to create a seamless experience that solves the core challenges faced by our target market.`;
-    } else if (conceptLower.includes('service') || conceptLower.includes('consulting')) {
-        return `We provide specialized professional services that directly tackle ${problem}. Our approach combines industry expertise, proven methodologies, and personalized attention to deliver superior results that exceed client expectations.`;
-    } else if (conceptLower.includes('product') || conceptLower.includes('device') || conceptLower.includes('hardware')) {
-        return `We are creating an innovative physical product that elegantly solves ${problem}. Our solution combines thoughtful design, advanced functionality, and affordability to deliver a product that customers genuinely need and want.`;
-    } else if (conceptLower.includes('marketplace') || conceptLower.includes('connect')) {
-        return `We are building a comprehensive marketplace that connects stakeholders and solves ${problem}. Our platform creates value by facilitating meaningful connections and streamlining processes that were previously inefficient or impossible.`;
+    // Generate a solution that specifically addresses their concept and problem
+    if (businessType === 'management_platform') {
+        return `We provide comprehensive ${keyWords.join(' and ')} management solutions specifically designed for ${extractTargetMarket(conceptLower)}. Our platform addresses ${problem} by offering an integrated suite of tools that streamline operations, reduce costs, and improve efficiency. Unlike expensive enterprise solutions, we focus on affordability and ease of use without sacrificing functionality.`;
+    } else if (businessType === 'digital_services') {
+        return `Our digital services platform specializes in ${keyWords.join(', ')} for ${extractTargetMarket(conceptLower)}. We solve ${problem} by providing accessible, professional-grade tools and services that were previously only available to large corporations. Our approach combines automation, expert guidance, and cost-effective pricing to deliver enterprise-level results.`;
+    } else if (businessType === 'software_platform') {
+        return `We've developed a software platform that specifically targets ${problem} through ${keyWords.join(' and ')} capabilities. Our solution provides ${extractTargetMarket(conceptLower)} with the tools they need to compete effectively while maintaining affordability and simplicity.`;
+    } else if (businessType === 'consulting_service') {
+        return `We offer specialized consulting services focused on ${keyWords.join(', ')} for ${extractTargetMarket(conceptLower)}. Our approach to ${problem} involves hands-on guidance, practical implementation, and ongoing support to ensure sustainable results.`;
     } else {
-        return `Our innovative business model directly addresses ${problem} through a comprehensive solution that combines technology, expertise, and strategic partnerships. We create value by streamlining processes, reducing costs, and delivering exceptional results.`;
+        return `Our business model centers on ${keyWords.join(', ')} solutions that directly address ${problem}. We've identified that ${extractTargetMarket(conceptLower)} need accessible, cost-effective alternatives to current market offerings, and our approach delivers exactly that.`;
     }
 }
 
@@ -455,6 +459,112 @@ function generateActionPlan(concept, problem) {
 
 function generateClosingStatement(concept) {
     return `This represents a significant opportunity to make a meaningful impact while building a sustainable and profitable business. Our team is committed to delivering innovative solutions that address real market needs, create exceptional value for customers, and generate strong returns for investors.`;
+}
+
+// Intelligent text analysis helper functions
+function identifyBusinessType(conceptLower) {
+    if (conceptLower.includes('manager') || conceptLower.includes('management')) {
+        return 'management_platform';
+    } else if (conceptLower.includes('digital') && (conceptLower.includes('service') || conceptLower.includes('tool'))) {
+        return 'digital_services';
+    } else if (conceptLower.includes('platform') || conceptLower.includes('software') || conceptLower.includes('app')) {
+        return 'software_platform';
+    } else if (conceptLower.includes('consulting') || conceptLower.includes('advisor')) {
+        return 'consulting_service';
+    } else {
+        return 'general_business';
+    }
+}
+
+function extractKeyWords(conceptLower) {
+    const keywords = [];
+    
+    // Technical capabilities
+    if (conceptLower.includes('endpoint') || conceptLower.includes('device')) keywords.push('device management');
+    if (conceptLower.includes('marketing')) keywords.push('marketing automation');
+    if (conceptLower.includes('online') || conceptLower.includes('digital')) keywords.push('digital solutions');
+    if (conceptLower.includes('tool')) keywords.push('business tools');
+    if (conceptLower.includes('management') || conceptLower.includes('manager')) keywords.push('management systems');
+    if (conceptLower.includes('security')) keywords.push('security solutions');
+    if (conceptLower.includes('analytics')) keywords.push('data analytics');
+    if (conceptLower.includes('automation')) keywords.push('process automation');
+    
+    // Default to generic terms if no specific keywords found
+    if (keywords.length === 0) {
+        keywords.push('business solutions', 'operational efficiency');
+    }
+    
+    return keywords;
+}
+
+function extractTargetMarket(conceptLower) {
+    if (conceptLower.includes('small business')) return 'small businesses';
+    if (conceptLower.includes('enterprise')) return 'enterprise clients';
+    if (conceptLower.includes('startup')) return 'startups';
+    if (conceptLower.includes('home')) return 'home-based businesses';
+    if (conceptLower.includes('restaurant')) return 'restaurants';
+    if (conceptLower.includes('retail')) return 'retail businesses';
+    if (conceptLower.includes('healthcare')) return 'healthcare providers';
+    if (conceptLower.includes('education')) return 'educational institutions';
+    
+    // Default based on context
+    return 'small and medium businesses';
+}
+
+function generateContextualIntro(concept, problem) {
+    const businessType = identifyBusinessType(concept.toLowerCase());
+    const targetMarket = extractTargetMarket(concept.toLowerCase());
+    
+    if (businessType === 'management_platform') {
+        return `The ${targetMarket} management landscape is fragmented and expensive, creating a significant opportunity for innovative solutions. Our comprehensive platform addresses these challenges by providing enterprise-grade capabilities at accessible price points.`;
+    } else if (businessType === 'digital_services') {
+        return `${targetMarket.charAt(0).toUpperCase() + targetMarket.slice(1)} face increasing pressure to digitize operations while managing costs. Our integrated service platform bridges this gap by making professional digital tools accessible and affordable.`;
+    } else {
+        return `Market research reveals that ${targetMarket} struggle with complex, expensive solutions that don't meet their specific needs. Our approach focuses on delivering exactly what they need at a price they can afford.`;
+    }
+}
+
+function generateProblemAnalysis(problem) {
+    // Analyze the problem to provide specific context
+    const problemLower = problem.toLowerCase();
+    
+    if (problemLower.includes('affordable') || problemLower.includes('cost') || problemLower.includes('expensive')) {
+        return `Cost barriers prevent many businesses from accessing the tools they need to grow. Current solutions are priced for large enterprises, leaving smaller businesses underserved. This represents a massive market opportunity for affordable, effective alternatives that deliver real value without breaking the budget.`;
+    } else if (problemLower.includes('complex') || problemLower.includes('difficult') || problemLower.includes('complicated')) {
+        return `Existing solutions are unnecessarily complex, requiring extensive training and IT support. This complexity barrier prevents adoption and reduces productivity. Our approach simplifies these processes while maintaining professional-grade functionality.`;
+    } else if (problemLower.includes('access') || problemLower.includes('available')) {
+        return `Many businesses lack access to professional-grade tools and services, limiting their growth potential. This access gap creates competitive disadvantages and missed opportunities. Our solution democratizes access to these essential business capabilities.`;
+    } else {
+        return `This challenge affects thousands of potential customers and represents a substantial market opportunity. Current solutions fail to address the specific needs of our target market, creating clear demand for our innovative approach.`;
+    }
+}
+
+function generateRevenueModel(concept) {
+    const conceptLower = concept.toLowerCase();
+    const businessType = identifyBusinessType(conceptLower);
+    
+    if (businessType === 'management_platform') {
+        return `Our revenue model leverages multiple streams:
+- Monthly subscription tiers based on business size and feature needs
+- Setup and onboarding services for new clients
+- Premium support and consulting services
+- Integration services for existing business systems
+- Training and certification programs`;
+    } else if (businessType === 'digital_services') {
+        return `We generate revenue through:
+- Service-based fees for marketing, management, and technical services
+- Monthly retainer agreements for ongoing support
+- Project-based pricing for specific implementations
+- Commission-based revenue sharing for successful outcomes
+- White-label licensing to other service providers`;
+    } else {
+        return `Our diversified revenue approach includes:
+- Core subscription services with tiered pricing
+- Professional services and implementation support
+- Partner program commissions and referral fees
+- Premium features and add-on services
+- Training and educational content`;
+    }
 }
 
 // Legacy helper function for backward compatibility
