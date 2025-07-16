@@ -805,10 +805,12 @@ premier entrepreneurship event with real-time content generation.
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({
-                        concept: concept,
-                        problem: problem,
-                        needs: needs,
-                        type: 'business_description'
+                        type: 'business_description',
+                        inputs: {
+                            concept: concept,
+                            problem: problem,
+                            needs: needs
+                        }
                     })
                 });
 
