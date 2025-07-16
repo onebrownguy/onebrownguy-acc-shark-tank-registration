@@ -1,11 +1,11 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- ****************************************
-ACC Shark Tank Admin Login
-Secure authentication portal for ACC Shark Tank event administrators
+NEST FEST Admin Login
+Secure authentication portal for NEST FEST event administrators
 
-@author ACC Development Team
-@version 1.0
+@author NEST FEST Development Team
+@version 2.0.0
 @date July 2025
 @note Implements secure login with session management and role-based access
 @note Uses DOMPurify for XSS protection and professional ACC branding
@@ -13,7 +13,7 @@ Secure authentication portal for ACC Shark Tank event administrators
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ACC Shark Tank - Admin Login</title>
+    <title>NEST FEST - Admin Login</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
     <style>
         * {
@@ -24,7 +24,7 @@ Secure authentication portal for ACC Shark Tank event administrators
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -54,7 +54,7 @@ Secure authentication portal for ACC Shark Tank event administrators
         }
 
         .login-header {
-            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
             color: white;
             padding: 40px 30px;
             text-align: center;
@@ -140,9 +140,9 @@ Secure authentication portal for ACC Shark Tank event administrators
 
         .form-group input:focus {
             outline: none;
-            border-color: #003366;
+            border-color: #2E1A47;
             background: white;
-            box-shadow: 0 0 0 3px rgba(0, 51, 102, 0.1);
+            box-shadow: 0 0 0 3px rgba(46, 26, 71, 0.1);
         }
 
         .required::after {
@@ -174,7 +174,7 @@ Secure authentication portal for ACC Shark Tank event administrators
         .login-btn {
             width: 100%;
             padding: 18px;
-            background: linear-gradient(135deg, #003366 0%, #004080 100%);
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
             color: white;
             border: none;
             border-radius: 12px;
@@ -188,7 +188,7 @@ Secure authentication portal for ACC Shark Tank event administrators
 
         .login-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 51, 102, 0.3);
+            box-shadow: 0 8px 20px rgba(46, 26, 71, 0.3);
         }
 
         .login-btn:disabled {
@@ -209,7 +209,7 @@ Secure authentication portal for ACC Shark Tank event administrators
 
         .spinner {
             border: 3px solid #f3f3f3;
-            border-top: 3px solid #003366;
+            border-top: 3px solid #2E1A47;
             border-radius: 50%;
             width: 30px;
             height: 30px;
@@ -230,14 +230,14 @@ Secure authentication portal for ACC Shark Tank event administrators
         }
 
         .back-link a {
-            color: #003366;
+            color: #2E1A47;
             text-decoration: none;
             font-weight: 500;
             transition: color 0.3s ease;
         }
 
         .back-link a:hover {
-            color: #004080;
+            color: #3D2558;
             text-decoration: underline;
         }
 
@@ -282,7 +282,7 @@ Secure authentication portal for ACC Shark Tank event administrators
         }
 
         .password-toggle:hover {
-            color: #003366;
+            color: #2E1A47;
         }
 
         .password-toggle svg {
@@ -311,7 +311,7 @@ Secure authentication portal for ACC Shark Tank event administrators
 
         .security-notice {
             background: #e8f4f8;
-            border-left: 4px solid #003366;
+            border-left: 4px solid #2E1A47;
             padding: 15px;
             margin-bottom: 25px;
             border-radius: 0 8px 8px 0;
@@ -331,12 +331,12 @@ Secure authentication portal for ACC Shark Tank event administrators
                 </svg>
             </div>
             <h1>Admin Portal</h1>
-            <p>ACC Shark Tank Event Management</p>
+            <p>NEST FEST Event Management</p>
         </div>
 
         <div class="login-form">
             <div class="security-notice">
-                <strong>Secure Access:</strong> This portal is for authorized ACC Shark Tank administrators only. All login attempts are monitored and logged.
+                <strong>Secure Access:</strong> This portal is for authorized NEST FEST administrators only. All login attempts are monitored and logged.
             </div>
 
             <div class="error-message" id="errorMessage">
@@ -506,7 +506,7 @@ Secure authentication portal for ACC Shark Tank event administrators
                         name: response.user.name,
                         loginTime: new Date().toISOString()
                     };
-                    sessionStorage.setItem('accUserInfo', JSON.stringify(userInfo));
+                    sessionStorage.setItem('nestFestUserInfo', JSON.stringify(userInfo));
                 } catch (e) {
                     console.warn('Could not store user info in sessionStorage:', e);
                 }

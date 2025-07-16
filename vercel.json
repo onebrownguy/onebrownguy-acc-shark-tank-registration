@@ -1,9 +1,12 @@
 {
-  "buildCommand": "echo 'No build step required'",
+  "buildCommand": "echo 'No build step required for static site'",
   "outputDirectory": ".",
   "functions": {
     "api/submit.js": {
-      "maxDuration": 10
+      "maxDuration": 15
+    },
+    "api/claude-generate.js": {
+      "maxDuration": 30
     },
     "api/login.js": {
       "maxDuration": 15
@@ -12,10 +15,10 @@
       "maxDuration": 10
     },
     "api/submissions.js": {
-      "maxDuration": 20
+      "maxDuration": 25
     },
     "api/participate.js": {
-      "maxDuration": 10
+      "maxDuration": 15
     }
   },
   "headers": [
@@ -37,6 +40,27 @@
         {
           "key": "Referrer-Policy",
           "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.anthropic.com; frame-ancestors 'none';"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        },
+        {
+          "key": "Access-Control-Allow-Methods",
+          "value": "GET, POST, PUT, DELETE, OPTIONS"
+        },
+        {
+          "key": "Access-Control-Allow-Headers",
+          "value": "Content-Type, Authorization, X-Requested-With"
         }
       ]
     },
@@ -46,6 +70,14 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
         }
       ]
     },
@@ -55,15 +87,79 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
         }
       ]
+    },
+    {
+      "source": "/quick-builder.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        }
+      ]
+    },
+    {
+      "source": "/participate.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=300"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/shark-tank",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/register",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/builder",
+      "destination": "/quick-builder.html",
+      "permanent": true
+    },
+    {
+      "source": "/ai-builder",
+      "destination": "/quick-builder.html",
+      "permanent": true
+    },
+    {
+      "source": "/participate",
+      "destination": "/participate.html",
+      "permanent": true
+    },
+    {
+      "source": "/involvement",
+      "destination": "/participate.html",
+      "permanent": true
     }
   ],
   "rewrites": [
     {
       "source": "/admin",
       "destination": "/admin/dashboard.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/admin/dashboard.html"
     }
-  ]
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
 }
-
