@@ -18,6 +18,7 @@
 !api/submissions.js
 !api/participate.js
 !api/claude-generate.js
+!api/debug.js
 !lib/
 !lib/auth.js
 !lib/sheets.js
@@ -28,8 +29,5 @@
 !package-lock.json
 !.gitignore
 !README.md
-<<<<<<< HEAD
 !.env.example
-=======
-!.env.example          
->>>>>>> ab311cfbdbb86ad6d2f013086274fc672004390b
+!CLAUDE.md
