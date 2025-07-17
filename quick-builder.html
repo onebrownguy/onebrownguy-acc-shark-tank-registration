@@ -1,36 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <!-- ****************************************
-NEST FEST AI-Enhanced Registration Form
-A modern, Claude AI-integrated registration system for NEST FEST's
-premier entrepreneurship event with real-time content generation.
+NEST FEST AI Presentation Coach
+A dedicated AI-powered coaching system to help students prepare
+professional presentations and build confidence in public speaking.
 
 @author NEST FEST Development Team
-@version 3.0
+@version 4.0 - AI Presentation Coach
 @date July 2025
-@changelog v3.0 - Added Claude API integration for real-time AI content generation
-@note This form includes XSS protection, input validation, and Claude AI assistance
-@note Uses DOMPurify for security and professional NEST FEST branding
-@note Implements Claude API calls for last-minute presentation content generation
+@note Focus: Student preparation, confidence building, content generation
+@note Clean architecture with progressive coaching workflow
 ********************************************-->
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEST FEST - AI-Enhanced Registration</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js"></script>
-    <script>
-        // Wait for DOMPurify to load before proceeding
-        function waitForDOMPurify() {
-            return new Promise((resolve) => {
-                if (typeof DOMPurify !== 'undefined') {
-                    resolve();
-                } else {
-                    setTimeout(() => waitForDOMPurify().then(resolve), 100);
-                }
-            });
-        }
-    </script>
+    <title>AI Presentation Coach - NEST FEST</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/2.4.7/purify.min.js" 
+            integrity="sha512-cHkyDvUmg8PHwqtiTAMffhAJYQC0grien+eO68ZXo1CzRcUueWkrQrReF8E4dwMIuYMpeBLrLbf+G+UdkTDkQA==" 
+            crossorigin="anonymous" 
+            referrerpolicy="no-referrer"></script>
+    <script src="/js/ai-coach.js" defer></script>
     <style>
         * {
             margin: 0;
@@ -45,7 +35,7 @@ premier entrepreneurship event with real-time content generation.
             padding: 20px;
         }
 
-        /* Back button styles */
+        /* Back button */
         .back-button-container {
             position: fixed;
             top: 20px;
@@ -77,12 +67,8 @@ premier entrepreneurship event with real-time content generation.
             text-decoration: none;
         }
 
-        .back-button svg {
-            flex-shrink: 0;
-        }
-
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 20px;
@@ -105,7 +91,7 @@ premier entrepreneurship event with real-time content generation.
         .header {
             background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
             color: white;
-            padding: 40px 30px;
+            padding: 60px 30px;
             text-align: center;
             position: relative;
             overflow: hidden;
@@ -129,32 +115,138 @@ premier entrepreneurship event with real-time content generation.
         }
 
         .header h1 {
-            font-size: 2.5rem;
-            margin-bottom: 10px;
+            font-size: 3rem;
+            margin-bottom: 15px;
             position: relative;
             z-index: 1;
         }
 
-        .header p {
-            font-size: 1.2rem;
+        .header .subtitle {
+            font-size: 1.3rem;
             opacity: 0.9;
             position: relative;
             z-index: 1;
+            margin-bottom: 10px;
         }
 
         .ai-badge {
             background: rgba(255, 255, 255, 0.2);
             color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 0.9rem;
-            margin-top: 10px;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            margin-top: 20px;
             display: inline-block;
             backdrop-filter: blur(10px);
+            font-weight: 600;
         }
 
-        .form-container {
-            padding: 40px 30px;
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 40px;
+            padding: 40px;
+            min-height: 600px;
+        }
+
+        .coaching-area {
+            background: #f8f6fc;
+            border-radius: 15px;
+            padding: 30px;
+            position: relative;
+        }
+
+        .progress-bar {
+            background: #e0e0e0;
+            height: 8px;
+            border-radius: 4px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
+            height: 100%;
+            width: 0%;
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 40px;
+        }
+
+        .step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            position: relative;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .step.active .step-number {
+            background: #2E1A47;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #28a745;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-align: center;
+        }
+
+        .step.active .step-label {
+            color: #2E1A47;
+            font-weight: 600;
+        }
+
+        .coaching-step {
+            display: none;
+        }
+
+        .coaching-step.active {
+            display: block;
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-title {
+            color: #2E1A47;
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .step-description {
+            color: #666;
+            margin-bottom: 25px;
+            line-height: 1.6;
+            font-size: 1.1rem;
         }
 
         .form-group {
@@ -178,7 +270,7 @@ premier entrepreneurship event with real-time content generation.
             border-radius: 10px;
             font-size: 1rem;
             transition: all 0.3s ease;
-            background: #f8f9fa;
+            background: white;
         }
 
         .form-group input:focus,
@@ -186,7 +278,6 @@ premier entrepreneurship event with real-time content generation.
         .form-group textarea:focus {
             outline: none;
             border-color: #2E1A47;
-            background: white;
             box-shadow: 0 0 0 3px rgba(46, 26, 71, 0.1);
         }
 
@@ -201,133 +292,28 @@ premier entrepreneurship event with real-time content generation.
             margin-left: 5px;
         }
 
-        .error {
-            color: #e74c3c;
-            font-size: 0.9rem;
-            margin-top: 5px;
-            display: none;
-        }
-
-        .ai-toggle-container {
-            background: linear-gradient(135deg, #f8f6fc 0%, #e8f4f8 100%);
-            border: 2px solid #2E1A47;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 25px;
-        }
-
-        .ai-toggle {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .toggle-switch {
-            position: relative;
-            width: 60px;
-            height: 30px;
-            background: #ccc;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        .toggle-switch.active {
-            background: #2E1A47;
-        }
-
-        .toggle-switch::after {
-            content: '';
-            position: absolute;
-            width: 26px;
-            height: 26px;
-            background: white;
-            border-radius: 50%;
-            top: 2px;
-            left: 2px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
-        }
-
-        .toggle-switch.active::after {
-            left: 32px;
-        }
-
-        .ai-assistant {
-            display: none;
-            background: white;
-            border: 2px solid #2E1A47;
-            border-radius: 15px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-
-        .ai-assistant.active {
-            display: block;
-            animation: expandIn 0.5s ease-out;
-        }
-
-        @keyframes expandIn {
-            from {
-                opacity: 0;
-                max-height: 0;
-            }
-            to {
-                opacity: 1;
-                max-height: 2000px;
-            }
-        }
-
-        .ai-question {
-            display: none;
-            margin-bottom: 20px;
-        }
-
-        .ai-question.active {
-            display: block;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .ai-question h4 {
-            color: #2E1A47;
-            margin-bottom: 10px;
-            font-size: 1.1rem;
-        }
-
-        .ai-buttons {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-            flex-wrap: wrap;
-        }
-
         .btn {
-            padding: 12px 24px;
+            padding: 15px 30px;
             border: none;
-            border-radius: 8px;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 1.1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin-right: 15px;
         }
 
         .btn-primary {
-            background: #2E1A47;
+            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #3D2558;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(46, 26, 71, 0.3);
+            box-shadow: 0 8px 20px rgba(46, 26, 71, 0.3);
         }
 
         .btn-secondary {
@@ -340,25 +326,16 @@ premier entrepreneurship event with real-time content generation.
             transform: translateY(-2px);
         }
 
-        .btn-outline {
-            background: transparent;
-            border: 2px solid #2E1A47;
-            color: #2E1A47;
-        }
-
-        .btn-outline:hover {
-            background: #2E1A47;
-            color: white;
-        }
-
         .btn-ai {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            font-size: 1.2rem;
+            padding: 18px 35px;
         }
 
         .btn-ai:hover {
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
         }
 
         .btn:disabled {
@@ -367,65 +344,45 @@ premier entrepreneurship event with real-time content generation.
             transform: none;
         }
 
-        .submit-btn {
-            width: 100%;
-            padding: 18px;
-            background: linear-gradient(135deg, #2E1A47 0%, #3D2558 100%);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 1.2rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 30px;
+        .content-preview {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            border: 2px solid #e0e0e0;
+            position: sticky;
+            top: 20px;
         }
 
-        .submit-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(46, 26, 71, 0.3);
+        .preview-title {
+            color: #2E1A47;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            font-weight: 700;
         }
 
-        .submit-btn:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        .loading {
-            display: none;
-            text-align: center;
+        .preview-content {
+            background: #f8f6fc;
             padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            min-height: 200px;
+            line-height: 1.6;
         }
 
-        .loading.active {
-            display: block;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #2E1A47;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .preview-empty {
+            color: #999;
+            font-style: italic;
+            text-align: center;
+            margin-top: 60px;
         }
 
         .ai-loading {
             display: none;
             text-align: center;
-            padding: 15px;
-            background: #f8f6fc;
+            padding: 20px;
+            background: white;
             border-radius: 10px;
-            margin: 15px 0;
+            margin: 20px 0;
         }
 
         .ai-loading.active {
@@ -433,13 +390,18 @@ premier entrepreneurship event with real-time content generation.
         }
 
         .ai-spinner {
-            border: 3px solid #f3f3f3;
-            border-top: 3px solid #667eea;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto 10px;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .success-message {
@@ -447,8 +409,8 @@ premier entrepreneurship event with real-time content generation.
             background: #d4edda;
             border: 2px solid #c3e6cb;
             color: #155724;
-            padding: 20px;
-            border-radius: 10px;
+            padding: 30px;
+            border-radius: 15px;
             text-align: center;
             margin-top: 20px;
         }
@@ -458,110 +420,91 @@ premier entrepreneurship event with real-time content generation.
             animation: fadeIn 0.5s ease-out;
         }
 
-        .ai-suggestion {
-            background: #f8f6fc;
+        .download-section {
+            background: linear-gradient(135deg, #f8f6fc 0%, #e8f4f8 100%);
             border: 2px solid #2E1A47;
-            border-radius: 10px;
-            padding: 20px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .ai-suggestion.active {
-            display: block;
-            animation: fadeIn 0.5s ease-out;
-        }
-
-        .ai-suggestion h4 {
-            color: #2E1A47;
-            margin-bottom: 15px;
-        }
-
-        .ai-suggestion-text {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 15px;
-            line-height: 1.6;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            min-height: 100px;
-            max-height: 400px;
-            overflow-y: auto;
-            border: 1px solid #e0e0e0;
-        }
-
-        .info-box {
-            background: #f8f6fc;
-            border-left: 4px solid #2E1A47;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 0 8px 8px 0;
-        }
-
-        .info-box h3 {
-            color: #2E1A47;
-            margin-bottom: 10px;
-        }
-
-        .info-box p {
-            color: #666;
-            line-height: 1.5;
-        }
-
-        .ai-feature-highlight {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 20px;
             border-radius: 15px;
-            margin-bottom: 25px;
+            padding: 25px;
+            margin-top: 20px;
             text-align: center;
         }
 
-        .ai-feature-highlight h3 {
-            margin-bottom: 10px;
-            font-size: 1.3rem;
+        .download-section h3 {
+            color: #2E1A47;
+            margin-bottom: 15px;
         }
 
-        .ai-feature-highlight p {
-            opacity: 0.9;
-            font-size: 0.95rem;
+        .download-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .download-btn {
+            background: white;
+            border: 2px solid #2E1A47;
+            color: #2E1A47;
+            padding: 15px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .download-btn:hover {
+            background: #2E1A47;
+            color: white;
+            text-decoration: none;
+        }
+
+        .tab-btn {
+            background: #e0e0e0;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #2E1A47;
+            color: white;
+        }
+
+        .tab-btn:hover {
+            background: #3D2558;
+            color: white;
+        }
+
+        .content-section {
+            line-height: 1.6;
+        }
+
+        .content-display {
+            max-height: 400px;
+            overflow-y: auto;
         }
 
         @media (max-width: 768px) {
-            .back-button-container {
-                top: 15px;
-                left: 15px;
-            }
-            
-            .back-button {
-                padding: 8px 12px;
-                font-size: 13px;
-            }
-
-            .container {
-                margin: 10px;
-                border-radius: 15px;
-            }
-            
-            .header {
-                padding: 30px 20px;
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+                padding: 20px;
             }
             
             .header h1 {
-                font-size: 2rem;
+                font-size: 2.5rem;
             }
             
-            .form-container {
-                padding: 30px 20px;
+            .step-indicator {
+                overflow-x: auto;
+                padding-bottom: 10px;
             }
             
-            .ai-buttons {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
+            .download-options {
+                grid-template-columns: 1fr;
             }
         }
     </style>
@@ -579,458 +522,219 @@ premier entrepreneurship event with real-time content generation.
 
     <div class="container">
         <div class="header">
-            <h1>NEST FEST</h1>
-            <p>Turn Your Business Ideas Into Reality</p>
-            <div class="ai-badge">🤖 AI-Enhanced Registration</div>
+            <h1>🤖 AI Presentation Coach</h1>
+            <p class="subtitle">Build Confidence Through AI-Powered Preparation</p>
+            <div class="ai-badge">
+                ✨ Transform Your Ideas Into Professional Presentations
+            </div>
         </div>
 
-        <div class="form-container">
-            <div class="ai-feature-highlight">
-                <h3>🚀 Last-Minute AI Assistance</h3>
-                <p>Need help creating your business description fast? Our Claude AI assistant can generate professional content for your presentation in real-time!</p>
-            </div>
-
-            <div class="info-box">
-                <h3>About the Event</h3>
-                <p>Join NEST FEST's premier entrepreneurship event! Present your idea, big or small, to go through a round of selection to move onto the next round and be invited to the pitch event. Selected participants will present to a panel of successful entrepreneurs and investors for feedback, mentorship, and potential funding opportunities.</p>
-            </div>
-
-            <form id="registrationForm">
-                <div class="form-group">
-                    <label for="fullName" class="required">Full Name</label>
-                    <input type="text" id="fullName" name="fullName" required>
-                    <div class="error" id="fullNameError">Please enter your full name</div>
+        <div class="main-content">
+            <div class="coaching-area">
+                <!-- Progress Bar -->
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
                 </div>
 
-                <div class="form-group">
-                    <label for="email" class="required">Email Address</label>
-                    <input type="email" id="email" name="email" required>
-                    <div class="error" id="emailError">Please enter a valid email address</div>
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                    <div class="step active" data-step="1">
+                        <div class="step-number">1</div>
+                        <div class="step-label">Your Info</div>
+                    </div>
+                    <div class="step" data-step="2">
+                        <div class="step-number">2</div>
+                        <div class="step-label">Your Idea</div>
+                    </div>
+                    <div class="step" data-step="3">
+                        <div class="step-number">3</div>
+                        <div class="step-label">The Problem</div>
+                    </div>
+                    <div class="step" data-step="4">
+                        <div class="step-number">4</div>
+                        <div class="step-label">Your Solution</div>
+                    </div>
+                    <div class="step" data-step="5">
+                        <div class="step-number">5</div>
+                        <div class="step-label">AI Magic</div>
+                    </div>
                 </div>
 
-                <div class="form-group">
-                    <label for="major" class="required">Major/Field of Study</label>
-                    <select id="major" name="major" required>
-                        <option value="">Select your major</option>
-                        <option value="Business Administration">Business Administration</option>
-                        <option value="Computer Science">Computer Science</option>
-                        <option value="Engineering">Engineering</option>
-                        <option value="Marketing">Marketing</option>
-                        <option value="Finance">Finance</option>
-                        <option value="Information Technology">Information Technology</option>
-                        <option value="Graphic Design">Graphic Design</option>
-                        <option value="Health Sciences">Health Sciences</option>
-                        <option value="Liberal Arts">Liberal Arts</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <div class="error" id="majorError">Please select your major</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="businessName" class="required">Business Name/Idea</label>
-                    <input type="text" id="businessName" name="businessName" required>
-                    <div class="error" id="businessNameError">Please enter your business name or idea</div>
-                </div>
-
-                <div class="form-group">
-                    <label for="businessDescription" class="required">Business Description</label>
+                <!-- Step 1: Student Info -->
+                <div class="coaching-step active" id="step1">
+                    <h2 class="step-title">👋 Let's Get Started!</h2>
+                    <p class="step-description">First, tell us a bit about yourself so we can personalize your AI coaching experience.</p>
                     
-                    <div class="ai-toggle-container">
-                        <div class="ai-toggle">
-                            <div class="toggle-switch" id="aiToggle"></div>
-                            <span><strong>Get AI-Powered Content Generation</strong></span>
-                        </div>
-                        <p style="color: #666; font-size: 0.9rem;">Let Claude AI help you create a compelling business description and presentation materials in seconds.</p>
-                    </div>
-
-                    <div class="ai-assistant" id="aiAssistant">
-                        <h3 style="color: #2E1A47; margin-bottom: 20px;">🤖 Claude AI Content Generator</h3>
-                        <p style="color: #666; margin-bottom: 20px;">Answer these questions and Claude will generate professional content for your NEST FEST submission.</p>
-                        
-                        <div class="ai-question active" id="question1">
-                            <h4>1. What's your business concept?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Briefly describe what your business does (2-3 sentences).</p>
-                            <textarea id="concept" placeholder="Example: We create affordable smart home devices that help seniors live independently by monitoring their daily activities and alerting family members if something seems wrong."></textarea>
-                            <div class="ai-buttons">
-                                <button type="button" class="btn btn-primary" onclick="nextQuestion(2)">Next</button>
-                            </div>
+                    <form id="studentInfoForm">
+                        <div class="form-group">
+                            <label for="studentName" class="required">Your Name</label>
+                            <input type="text" id="studentName" name="studentName" autocomplete="name" required>
                         </div>
 
-                        <div class="ai-question" id="question2">
-                            <h4>2. What problem are you solving?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">Describe the specific pain point your business addresses.</p>
-                            <textarea id="problem" placeholder="Example: Many seniors want to age in place but their families worry about their safety. Current monitoring systems are expensive and invasive, creating a gap in affordable, dignified care solutions."></textarea>
-                            <div class="ai-buttons">
-                                <button type="button" class="btn btn-outline" onclick="nextQuestion(1)">Back</button>
-                                <button type="button" class="btn btn-primary" onclick="nextQuestion(3)">Next</button>
-                            </div>
+                        <div class="form-group">
+                            <label for="studentEmail" class="required">Email Address</label>
+                            <input type="email" id="studentEmail" name="studentEmail" autocomplete="email" required>
                         </div>
 
-                        <div class="ai-question" id="question3">
-                            <h4>3. What do you need to succeed?</h4>
-                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 10px;">What funding, mentorship, or resources are you seeking?</p>
-                            <textarea id="needs" placeholder="Example: We're seeking $100K in funding to hire 2 developers and scale production. We also need mentorship in healthcare regulations and partnerships with senior living communities."></textarea>
-                            <div class="ai-buttons">
-                                <button type="button" class="btn btn-outline" onclick="nextQuestion(2)">Back</button>
-                                <button type="button" class="btn btn-ai" onclick="generateWithClaude()" id="generateBtn">🤖 Generate with Claude AI</button>
-                            </div>
+                        <div class="form-group">
+                            <label for="studentMajor" class="required">Major/Field of Study</label>
+                            <select id="studentMajor" name="studentMajor" autocomplete="organization-title" required>
+                                <option value="">Select your major</option>
+                                <option value="Business Administration">Business Administration</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Engineering">Engineering</option>
+                                <option value="Marketing">Marketing</option>
+                                <option value="Finance">Finance</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Graphic Design">Graphic Design</option>
+                                <option value="Health Sciences">Health Sciences</option>
+                                <option value="Liberal Arts">Liberal Arts</option>
+                                <option value="Other">Other</option>
+                            </select>
                         </div>
 
-                        <div class="ai-loading" id="aiLoading">
-                            <div class="ai-spinner"></div>
-                            <p>Claude AI is generating your content...</p>
-                        </div>
-
-                        <div class="ai-suggestion" id="aiSuggestion">
-                            <h4>🎯 Your AI-Generated Business Description</h4>
-                            <p style="color: #666; margin-bottom: 15px;">Claude AI has created this professional business description based on your answers:</p>
-                            <div class="ai-suggestion-text" id="suggestionText"></div>
-                            <div class="ai-buttons">
-                                <button type="button" class="btn btn-primary" onclick="acceptSuggestion()">Use This Description</button>
-                                <button type="button" class="btn btn-outline" onclick="editSuggestion()">Copy & Edit</button>
-                                <button type="button" class="btn btn-secondary" onclick="restartAI()">Start Over</button>
-                                <button type="button" class="btn btn-ai" onclick="regenerateContent()">🔄 Regenerate</button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <textarea id="businessDescription" name="businessDescription" required placeholder="Describe your business idea, the problem it solves, your target market, competitive advantage, and what you're seeking from this event..."></textarea>
-                    <div class="error" id="businessDescriptionError">Please provide a business description</div>
+                        <button type="button" class="btn btn-primary" data-action="next-step" data-target="2">
+                            Continue to Your Idea →
+                        </button>
+                    </form>
                 </div>
 
-                <button type="submit" class="submit-btn" id="submitBtn">
-                    Register for NEST FEST
-                </button>
-            </form>
+                <!-- Step 2: Business Idea -->
+                <div class="coaching-step" id="step2">
+                    <h2 class="step-title">💡 Your Business Idea</h2>
+                    <p class="step-description">Describe your business idea in just one sentence. Don't worry about making it perfect - our AI will help you refine it!</p>
+                    
+                    <div class="form-group">
+                        <label for="businessIdea" class="required">Business Idea (One Sentence)</label>
+                        <textarea id="businessIdea" name="businessIdea" autocomplete="off" required 
+                                 placeholder="Example: A mobile app that connects college students with local businesses for part-time internships and project-based work."></textarea>
+                    </div>
 
-            <div class="loading" id="loadingState">
-                <div class="spinner"></div>
-                <p>Submitting your registration...</p>
+                    <button type="button" class="btn btn-secondary" data-action="prev-step" data-target="1">← Back</button>
+                    <button type="button" class="btn btn-primary" data-action="next-step" data-target="3">Continue to Problem →</button>
+                </div>
+
+                <!-- Step 3: Problem -->
+                <div class="coaching-step" id="step3">
+                    <h2 class="step-title">🎯 What Problem Are You Solving?</h2>
+                    <p class="step-description">Every great business solves a real problem. Describe the specific challenge or pain point your idea addresses.</p>
+                    
+                    <div class="form-group">
+                        <label for="problemDescription" class="required">The Problem</label>
+                        <textarea id="problemDescription" name="problemDescription" autocomplete="off" required 
+                                 placeholder="Example: College students struggle to find meaningful work experience while studying, and local businesses need affordable help with short-term projects but don't have resources for full hiring processes."></textarea>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary" data-action="prev-step" data-target="2">← Back</button>
+                    <button type="button" class="btn btn-primary" data-action="next-step" data-target="4">Continue to Solution →</button>
+                </div>
+
+                <!-- Step 4: Solution -->
+                <div class="coaching-step" id="step4">
+                    <h2 class="step-title">🚀 Your Solution</h2>
+                    <p class="step-description">Now describe how your business idea solves the problem. What makes your approach unique or better?</p>
+                    
+                    <div class="form-group">
+                        <label for="solutionDescription" class="required">Your Solution</label>
+                        <textarea id="solutionDescription" name="solutionDescription" autocomplete="off" required 
+                                 placeholder="Example: Our platform provides a simple matching system where businesses can post short-term projects and students can apply based on their skills and availability. We handle contracts, payments, and feedback to ensure quality for both sides."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fundingNeeds">What Support Do You Need? (Optional)</label>
+                        <textarea id="fundingNeeds" name="fundingNeeds" autocomplete="off"
+                                 placeholder="Example: $50K in funding to develop the mobile app and establish partnerships with 10 local businesses. Also seeking mentorship in scaling and legal guidance for contractor agreements."></textarea>
+                    </div>
+
+                    <button type="button" class="btn btn-secondary" data-action="prev-step" data-target="3">← Back</button>
+                    <button type="button" class="btn btn-ai" data-action="generate-content">🤖 Generate My Presentation!</button>
+                </div>
+
+                <!-- Step 5: AI Generation -->
+                <div class="coaching-step" id="step5">
+                    <h2 class="step-title">✨ AI is Creating Your Content!</h2>
+                    <p class="step-description">Our AI is analyzing your responses and creating professional presentation materials to boost your confidence.</p>
+                    
+                    <div class="ai-loading active" id="aiLoading">
+                        <div class="ai-spinner"></div>
+                        <p><strong>Claude AI is working on your presentation...</strong></p>
+                        <p>This may take 15-30 seconds</p>
+                    </div>
+
+                    <div id="generationComplete" style="display: none;">
+                        <h3 style="color: #28a745; margin-bottom: 20px;">🎉 Your Presentation Materials Are Ready!</h3>
+                        <p>We've created multiple formats to help you practice and present with confidence:</p>
+                        
+                        <!-- Content Preview Tabs -->
+                        <div class="content-tabs" style="margin: 20px 0;">
+                            <div class="tab-buttons" style="display: flex; gap: 10px; margin-bottom: 20px;">
+                                <button class="tab-btn active" data-action="show-content" data-type="elevator">📢 Elevator Pitch</button>
+                                <button class="tab-btn" data-action="show-content" data-type="presentation">📊 Presentation</button>
+                                <button class="tab-btn" data-action="show-content" data-type="notes">📝 Speaker Notes</button>
+                                <button class="tab-btn" data-action="show-content" data-type="qa">❓ Q&A Prep</button>
+                            </div>
+                            
+                            <div class="content-display" style="background: #f8f6fc; padding: 20px; border-radius: 10px; min-height: 300px; white-space: pre-wrap; font-family: monospace; font-size: 14px; line-height: 1.6;">
+                                <div id="content-elevator" class="content-section active">Select a tab to view your content...</div>
+                                <div id="content-presentation" class="content-section" style="display: none;"></div>
+                                <div id="content-notes" class="content-section" style="display: none;"></div>
+                                <div id="content-qa" class="content-section" style="display: none;"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="download-section">
+                            <h3>📥 Download Your Materials</h3>
+                            <p>Choose the format that works best for your presentation style:</p>
+                            <div class="download-options">
+                                <a href="#" class="download-btn" data-action="download" data-type="elevator">
+                                    📢 Elevator Pitch<br><small>30-second version</small>
+                                </a>
+                                <a href="#" class="download-btn" data-action="download" data-type="presentation">
+                                    📊 Full Presentation<br><small>5-minute outline</small>
+                                </a>
+                                <a href="#" class="download-btn" data-action="download" data-type="notes">
+                                    📝 Speaker Notes<br><small>Confidence boosters</small>
+                                </a>
+                                <a href="#" class="download-btn" data-action="download" data-type="qa">
+                                    ❓ Q&A Prep<br><small>Anticipated questions</small>
+                                </a>
+                            </div>
+                        </div>
+
+                        <div style="text-align: center; margin-top: 30px;">
+                            <a href="/index.html" class="btn btn-primary" style="margin-right: 15px;">
+                                🎯 Register for NEST FEST
+                            </a>
+                            <button type="button" class="btn btn-secondary" data-action="restart">
+                                🔄 Create Another Presentation
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="success-message" id="successMessage">
-                <h3>Registration Successful!</h3>
-                <p>Thank you for registering for NEST FEST! We'll send you event details and updates via email.</p>
-                <p><strong>What's next?</strong> Start preparing your pitch and get ready to impress our panel of investors!</p>
+            <!-- Content Preview Panel -->
+            <div class="content-preview">
+                <h3 class="preview-title">📋 Your Progress</h3>
+                <div class="preview-content" id="contentPreview">
+                    <div class="preview-empty">
+                        Your generated content will appear here as you progress through the steps.
+                    </div>
+                </div>
+                
+                <div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid #e0e0e0;">
+                    <h4 style="color: #2E1A47; margin-bottom: 15px;">✨ What You'll Get:</h4>
+                    <ul style="color: #666; line-height: 1.8;">
+                        <li>🎤 Professional elevator pitch</li>
+                        <li>📊 Complete presentation outline</li>
+                        <li>💪 Confidence-building speaker notes</li>
+                        <li>❓ Q&A preparation guide</li>
+                        <li>🚀 Ready-to-present materials</li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    <script>
-        /* ****************************************
-         * Sanitize user input to prevent XSS attacks
-         ****************************************/
-        function sanitizeInput(input) {
-            if (typeof input !== 'string') return input;
-            
-            // Check if DOMPurify is available
-            if (typeof DOMPurify !== 'undefined') {
-                return DOMPurify.sanitize(input.trim());
-            } else {
-                // Fallback sanitization if DOMPurify isn't loaded
-                console.warn('DOMPurify not loaded, using basic sanitization');
-                return input.trim()
-                    .replace(/[<>]/g, '') // Remove basic HTML tags
-                    .replace(/javascript:/gi, '') // Remove javascript: protocol
-                    .replace(/on\w+=/gi, ''); // Remove event handlers
-            }
-        }
-
-        /* ****************************************
-         * Validate all required form fields and email format
-         ****************************************/
-        function validateForm() {
-            let isValid = true;
-            const requiredFields = ['fullName', 'email', 'major', 'businessName', 'businessDescription'];
-            
-            requiredFields.forEach(field => {
-                const input = document.getElementById(field);
-                const error = document.getElementById(field + 'Error');
-                
-                if (!input.value.trim()) {
-                    error.style.display = 'block';
-                    input.style.borderColor = '#e74c3c';
-                    isValid = false;
-                } else {
-                    error.style.display = 'none';
-                    input.style.borderColor = '#e0e0e0';
-                }
-            });
-
-            // Email validation
-            const email = document.getElementById('email');
-            const emailError = document.getElementById('emailError');
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            
-            if (email.value.trim() && !emailRegex.test(email.value.trim())) {
-                emailError.textContent = 'Please enter a valid email address';
-                emailError.style.display = 'block';
-                email.style.borderColor = '#e74c3c';
-                isValid = false;
-            }
-
-            return isValid;
-        }
-
-        // Global variables for AI Assistant functionality
-        let currentQuestion = 1;
-        const aiToggle = document.getElementById('aiToggle');
-        const aiAssistant = document.getElementById('aiAssistant');
-        let aiEnabled = false;
-
-        /* ****************************************
-         * Initialize AI assistant toggle functionality
-         ****************************************/
-        aiToggle.addEventListener('click', function() {
-            aiEnabled = !aiEnabled;
-            aiToggle.classList.toggle('active', aiEnabled);
-            aiAssistant.classList.toggle('active', aiEnabled);
-            
-            if (aiEnabled) {
-                showQuestion(1);
-            }
-        });
-
-        /* ****************************************
-         * Navigate between AI assistant questions
-         ****************************************/
-        function showQuestion(questionNum) {
-            document.querySelectorAll('.ai-question').forEach(q => q.classList.remove('active'));
-            document.getElementById(`question${questionNum}`).classList.add('active');
-            currentQuestion = questionNum;
-        }
-
-        function nextQuestion(questionNum) {
-            showQuestion(questionNum);
-        }
-
-        /* ****************************************
-         * Call Claude API to generate business description
-         ****************************************/
-        async function generateWithClaude() {
-            // Wait for DOMPurify to be available
-            await waitForDOMPurify();
-            
-            const concept = sanitizeInput(document.getElementById('concept').value);
-            const problem = sanitizeInput(document.getElementById('problem').value);
-            const needs = sanitizeInput(document.getElementById('needs').value);
-
-            if (!concept || !problem || !needs) {
-                alert('Please complete all questions to generate your business description.');
-                return;
-            }
-
-            // Show loading state
-            document.getElementById('aiLoading').classList.add('active');
-            document.getElementById('generateBtn').disabled = true;
-
-            try {
-                const response = await fetch('/api/claude-generate', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        type: 'business_description',
-                        inputs: {
-                            concept: concept,
-                            problem: problem,
-                            needs: needs
-                        }
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-
-                const data = await response.json();
-                
-                // Hide loading and show result
-                document.getElementById('aiLoading').classList.remove('active');
-                document.getElementById('generateBtn').disabled = false;
-                
-                // Display the generated content
-                const suggestionElement = document.getElementById('suggestionText');
-                const aiSuggestionElement = document.getElementById('aiSuggestion');
-                
-                if (suggestionElement && aiSuggestionElement) {
-                    suggestionElement.textContent = data.content;
-                    aiSuggestionElement.classList.add('active');
-                    
-                    // Scroll to the suggestion
-                    aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
-                }
-
-            } catch (error) {
-                console.error('Error calling Claude API:', error);
-                document.getElementById('aiLoading').classList.remove('active');
-                document.getElementById('generateBtn').disabled = false;
-                
-                // Fallback to local generation
-                generateFallbackDescription();
-            }
-        }
-
-        /* ****************************************
-         * Fallback content generation if Claude API fails
-         ****************************************/
-        function generateFallbackDescription() {
-            const concept = sanitizeInput(document.getElementById('concept').value);
-            const problem = sanitizeInput(document.getElementById('problem').value);
-            const needs = sanitizeInput(document.getElementById('needs').value);
-
-            const description = `BUSINESS CONCEPT: ${concept}
-
-THE PROBLEM WE'RE SOLVING: ${problem}
-
-WHAT WE'RE SEEKING: ${needs}
-
-This represents a significant opportunity to make a meaningful impact while building a sustainable and profitable business. Our team is committed to delivering innovative solutions that address real market needs and create value for all stakeholders.`;
-
-            const suggestionElement = document.getElementById('suggestionText');
-            const aiSuggestionElement = document.getElementById('aiSuggestion');
-            
-            if (suggestionElement && aiSuggestionElement) {
-                suggestionElement.textContent = description;
-                aiSuggestionElement.classList.add('active');
-                aiSuggestionElement.scrollIntoView({ behavior: 'smooth' });
-            }
-        }
-
-        /* ****************************************
-         * Regenerate content with Claude API
-         ****************************************/
-        async function regenerateContent() {
-            await generateWithClaude();
-        }
-
-        /* ****************************************
-         * Copy AI-generated description to main form field
-         ****************************************/
-        function acceptSuggestion() {
-            const suggestion = document.getElementById('suggestionText').textContent;
-            document.getElementById('businessDescription').value = suggestion;
-            aiAssistant.classList.remove('active');
-            aiToggle.classList.remove('active');
-            aiEnabled = false;
-            
-            // Scroll to business description field for review
-            document.getElementById('businessDescription').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        /* ****************************************
-         * Copy AI suggestion to main form for manual editing
-         ****************************************/
-        function editSuggestion() {
-            const suggestion = document.getElementById('suggestionText').textContent;
-            document.getElementById('businessDescription').value = suggestion;
-            document.getElementById('businessDescription').focus();
-        }
-
-        /* ****************************************
-         * Reset AI assistant to start over
-         ****************************************/
-        function restartAI() {
-            document.getElementById('aiSuggestion').classList.remove('active');
-            document.getElementById('concept').value = '';
-            document.getElementById('problem').value = '';
-            document.getElementById('needs').value = '';
-            showQuestion(1);
-        }
-
-        /* ****************************************
-         * Handle form submission with validation and API integration
-         ****************************************/
-        document.getElementById('registrationForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            
-            if (!validateForm()) {
-                return;
-            }
-
-            const formData = {
-                fullName: sanitizeInput(document.getElementById('fullName').value),
-                email: sanitizeInput(document.getElementById('email').value),
-                major: document.getElementById('major').value,
-                businessName: sanitizeInput(document.getElementById('businessName').value),
-                businessDescription: sanitizeInput(document.getElementById('businessDescription').value),
-                timestamp: new Date().toISOString(),
-                aiAssisted: aiEnabled || document.getElementById('aiSuggestion').classList.contains('active')
-            };
-
-            // Show loading state and disable submit button
-            document.getElementById('loadingState').classList.add('active');
-            document.getElementById('submitBtn').disabled = true;
-
-            // Submit to API endpoint
-            fetch('/api/submit', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(formData)
-            })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                console.log('Success:', data);
-                showSuccess();
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                document.getElementById('loadingState').classList.remove('active');
-                document.getElementById('submitBtn').disabled = false;
-                alert('Registration failed. Please try again. Error: ' + error.message);
-            });
-        });
-
-        /* ****************************************
-         * Display success message after form submission
-         ****************************************/
-        function showSuccess() {
-            document.getElementById('loadingState').classList.remove('active');
-            document.getElementById('successMessage').classList.add('active');
-            document.getElementById('registrationForm').style.display = 'none';
-            
-            // Scroll to success message
-            document.getElementById('successMessage').scrollIntoView({ behavior: 'smooth' });
-        }
-
-        /* ****************************************
-         * Initialize real-time form validation
-         ****************************************/
-        document.querySelectorAll('input, select, textarea').forEach(input => {
-            input.addEventListener('blur', function() {
-                const errorElement = document.getElementById(this.id + 'Error');
-                if (errorElement) {
-                    if (this.value.trim()) {
-                        errorElement.style.display = 'none';
-                        this.style.borderColor = '#e0e0e0';
-                    }
-                }
-            });
-        });
-
-        /* ****************************************
-         * Initialize email validation on field blur
-         ****************************************/
-        document.getElementById('email').addEventListener('blur', function() {
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            const errorElement = document.getElementById('emailError');
-            
-            if (this.value.trim() && !emailRegex.test(this.value.trim())) {
-                errorElement.style.display = 'block';
-                this.style.borderColor = '#e74c3c';
-            } else if (this.value.trim()) {
-                errorElement.style.display = 'none';
-                this.style.borderColor = '#e0e0e0';
-            }
-        });
-    </script>
 </body>
 </html>
