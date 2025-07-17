@@ -53,7 +53,7 @@ async function claudeGenerateHandler(req, res) {
         }
 
         // Validate content type
-        const validTypes = ['business_description', 'pitch_outline', 'executive_summary', 'presentation_slides'];
+        const validTypes = ['business_description', 'pitch_outline', 'executive_summary', 'presentation_slides', 'presentation_coaching'];
         if (!validTypes.includes(type)) {
             return res.status(400).json({ 
                 error: 'Invalid content type',
@@ -72,6 +72,7 @@ async function claudeGenerateHandler(req, res) {
         }
 
         console.log(`AI generation request: ${type} from ${clientId}`);
+        console.log('Input data received:', JSON.stringify(inputs, null, 2));
 
         /* *******************************
          * Attempt Claude API generation with fallback
@@ -83,13 +84,21 @@ async function claudeGenerateHandler(req, res) {
         try {
             // Try Claude API first
             if (process.env.ANTHROPIC_API_KEY) {
+                console.log(`Attempting Claude API generation for type: ${type}`);
+                console.log(`API Key present: ${!!process.env.ANTHROPIC_API_KEY}`);
+                console.log(`API Key length: ${process.env.ANTHROPIC_API_KEY ? process.env.ANTHROPIC_API_KEY.length : 0}`);
                 generatedContent = await generateWithClaudeAPI(type, inputs);
                 usedAI = true;
                 console.log(`Claude API generation successful for type: ${type}`);
             } else {
+                console.log('Claude API not configured - no ANTHROPIC_API_KEY found');
                 throw new Error('Claude API not configured');
             }
         } catch (apiError) {
+            console.error(`=== CLAUDE API FAILED ===`);
+            console.error('API Error details:', apiError);
+            console.error('Error message:', apiError.message);
+            console.error('Stack:', apiError.stack);
             console.warn(`Claude API failed, using fallback: ${apiError.message}`);
             // Fallback to template-based generation
             generatedContent = await generateWithTemplate(type, inputs);
@@ -143,11 +152,14 @@ async function generateWithClaudeAPI(type, inputs) {
      * @return : generated content string
      *******************************/
     
+    console.log('Building Claude prompt for type:', type);
     const prompt = buildClaudePrompt(type, inputs);
+    console.log('Prompt length:', prompt.length);
     
     // Use built-in fetch (Node.js 18+) or require a fetch polyfill
     const fetch = globalThis.fetch || require('node-fetch');
     
+    console.log('Making request to Claude API...');
     const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -164,14 +176,35 @@ async function generateWithClaudeAPI(type, inputs) {
             }]
         })
     });
+    
+    console.log('Claude API response status:', response.status);
 
     if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.error('Claude API error response:', errorData);
         throw new Error(`Claude API error: ${response.status} - ${errorData.error?.message || 'Unknown error'}`);
     }
 
     const data = await response.json();
-    return data.content[0].text;
+    console.log('Claude API success - response data keys:', Object.keys(data));
+    const responseText = data.content[0].text;
+    console.log('Content length:', responseText?.length || 0);
+    console.log('Raw Claude response:', responseText?.substring(0, 200) + '...');
+    
+    // For presentation_coaching, try to parse as JSON
+    if (type === 'presentation_coaching') {
+        try {
+            const parsedContent = JSON.parse(responseText);
+            console.log('Successfully parsed Claude JSON response');
+            return parsedContent;
+        } catch (parseError) {
+            console.error('Failed to parse Claude JSON response:', parseError.message);
+            console.log('Raw response that failed to parse:', responseText);
+            throw new Error('Claude returned invalid JSON: ' + parseError.message);
+        }
+    }
+    
+    return responseText;
 }
 
 /**
@@ -241,6 +274,27 @@ Create detailed slide content suggestions based on these details:
 
 Suggest 10-12 slide topics with detailed content descriptions, talking points, and visual suggestions for each slide.`;
 
+        case 'presentation_coaching':
+            return `You are helping ${inputs.studentName || 'a student'} prepare for NEST FEST pitch presentation.
+
+Their business: ${inputs.businessIdea || 'Not provided'}
+Problem they solve: ${inputs.problemDescription || 'Not provided'}  
+Their solution: ${inputs.solutionDescription || 'Not provided'}
+Funding needed: ${inputs.fundingNeeds || 'Not provided'}
+Student major: ${inputs.studentMajor || 'Not provided'}
+
+Create 4 polished, professional coaching materials. Take their raw input and transform it into compelling, presentation-ready content.
+
+Return as JSON:
+{
+  "elevator": "30-second elevator pitch - polished and compelling version of their idea",
+  "presentation": "5-minute presentation outline with timing, structure, and improved messaging", 
+  "notes": "Speaker confidence notes with delivery tips and talking points",
+  "qa": "Q&A preparation with anticipated questions and strong answers"
+}
+
+Make the content significantly better than their input - add structure, improve language, make it more compelling. Return ONLY valid JSON.`;
+
         default:
             return `${baseContext}
 
@@ -268,6 +322,8 @@ async function generateWithTemplate(type, inputs) {
             return generateExecutiveSummaryTemplate(inputs);
         case 'presentation_slides':
             return generatePresentationSlidesTemplate(inputs);
+        case 'presentation_coaching':
+            return generatePresentationCoachingTemplate(inputs);
         default:
             return generateGenericTemplate(inputs);
     }
@@ -1045,5 +1101,145 @@ setInterval(() => {
         }
     }
 }, 60 * 1000); // Clean up every minute
+
+/**
+ * Generate presentation coaching template with proper JSON format
+ */
+function generatePresentationCoachingTemplate(inputs) {
+    const studentName = inputs.studentName || 'Student';
+    const businessIdea = inputs.businessIdea || 'innovative business concept';
+    const problemDescription = inputs.problemDescription || 'significant market challenge';
+    const solutionDescription = inputs.solutionDescription || 'comprehensive solution approach';
+    const fundingNeeds = inputs.fundingNeeds || 'support and resources to grow';
+
+    const elevator = `Hi, I'm ${studentName}, a ${inputs.studentMajor || 'Austin Community College'} student with a vision to transform how businesses operate. 
+
+${businessIdea.charAt(0).toUpperCase() + businessIdea.slice(1)}
+
+The problem is clear: ${problemDescription} This affects countless businesses and families in our community, creating real barriers to success and growth.
+
+Our solution is innovative yet practical: ${solutionDescription} 
+
+What makes us different is our student-led approach - we're creating entry-level opportunities while delivering professional-grade services. We're seeking ${fundingNeeds.toLowerCase()} to launch this initiative and start making a measurable impact in our community.
+
+This isn't just a business opportunity - it's a chance to bridge the gap between education and real-world application while solving genuine problems for local businesses and families.`;
+
+    const presentation = `NEST FEST PRESENTATION OUTLINE - ${studentName}
+
+🎯 HOOK & INTRODUCTION (30 seconds)
+   - "Hi, I'm ${studentName}, a ${inputs.studentMajor || 'Austin Community College'} student, and I'm here to solve a problem that affects every business owner in this room"
+   - "How many of you have struggled with [relate to their specific problem]?"
+   - Business concept: ${businessIdea}
+
+🔥 THE PROBLEM (60 seconds)
+   - The Challenge: ${problemDescription}
+   - Real Impact: "This isn't just an inconvenience - it's costing businesses money and limiting growth"
+   - Market Scope: "This affects thousands of local businesses and families"
+   - Why Now: "The need for affordable, accessible solutions has never been greater"
+
+💡 OUR SOLUTION (90 seconds)
+   - Our Approach: ${solutionDescription}
+   - Unique Value: "We're student-led, which means fresh perspectives, affordable pricing, and flexible service"
+   - Key Benefits:
+     * Cost-effective alternative to traditional services
+     * Student talent creates entry-level job opportunities
+     * Personal attention and customized solutions
+     * Community-focused approach
+   - Competitive Advantage: "While others focus on big corporate clients, we're building solutions specifically for small businesses and families"
+
+💰 BUSINESS MODEL & TRACTION (45 seconds)
+   - Revenue Streams: Service fees, retainer agreements, training programs
+   - Target Market: Small businesses, families, startups
+   - Scalability: "Once we prove the model locally, we can expand to other college communities"
+   - Early Validation: "We've already identified specific pain points through market research"
+
+🚀 WHAT WE'RE SEEKING (60 seconds)
+   - Funding Request: ${fundingNeeds}
+   - Specific Use of Funds:
+     * 40% - Student wages and training
+     * 30% - Technology and infrastructure
+     * 20% - Marketing and business development
+     * 10% - Operations and administration
+   - Milestones: "In 3 months, we'll have served 20+ clients and hired 5 students"
+   - ROI: "This investment creates jobs, serves community needs, and builds a sustainable business"
+
+🎪 CLOSING & CALL TO ACTION (30 seconds)
+   - Vision: "We're not just building a business - we're creating opportunities and solving real problems"
+   - Ask: "Join us in bridging the gap between education and community needs"
+   - Next Steps: "Let's discuss how you can be part of this solution"
+   - Contact: "${studentName} - [Your Contact Information]"
+   - "Thank you for believing in student entrepreneurs!"
+
+DELIVERY TIPS:
+• Make eye contact with different audience members
+• Use hand gestures to emphasize key points
+• Pause after important statements for impact
+• Show genuine passion for solving the problem
+• Practice timing - aim for 4.5 minutes to allow for Q&A buffer`;
+
+    const notes = `SPEAKER CONFIDENCE NOTES
+
+BEFORE YOU START:
+- Take a deep breath and smile
+- Remember: everyone wants you to succeed
+- Your idea has value - that's why you're here
+
+KEY TALKING POINTS:
+- Lead with passion for solving ${problemDescription}
+- Emphasize real-world impact of your solution
+- Show you understand your market
+
+CONFIDENCE BOOSTERS:
+- "This idea came from my own experience..."
+- "I've researched this extensively..."
+- "The feedback I've received has been encouraging..."
+
+BODY LANGUAGE TIPS:
+- Stand tall and make eye contact
+- Use hand gestures to emphasize points
+- Move naturally, don't stay frozen in place
+
+IF YOU GET NERVOUS:
+- Pause and take a breath
+- Focus on sharing your story, not performing
+- Remember: you know your idea better than anyone`;
+
+    const qa = `Q&A PREPARATION GUIDE
+
+LIKELY QUESTIONS:
+
+Q: "How do you plan to make money?"
+A: Focus on your business model and revenue streams
+
+Q: "What's your biggest challenge?"
+A: Be honest but show you've thought about solutions
+
+Q: "Who are your competitors?"
+A: Show you understand the market landscape
+
+Q: "How much funding do you need?"
+A: ${fundingNeeds ? `Reference your specific needs: ${fundingNeeds}` : 'Be specific about what the money will accomplish'}
+
+Q: "What's your timeline?"
+A: Provide realistic milestones and next steps
+
+TIPS FOR ANSWERING:
+- It's okay to say "I don't know, but I'll find out"
+- Bridge back to your core message
+- Keep answers concise (30-60 seconds max)
+- Thank the questioner before answering
+
+QUESTIONS TO ASK THEM:
+- "What advice would you give to someone starting in this space?"
+- "What do you see as the biggest opportunity here?"
+- "Would you be interested in staying connected as we develop this?"`;
+
+    return {
+        elevator,
+        presentation,
+        notes,
+        qa
+    };
+}
 
 module.exports = claudeGenerateHandler;
