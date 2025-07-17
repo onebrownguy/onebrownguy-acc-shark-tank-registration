@@ -31,6 +31,9 @@
     },
     "api/test-claude.js": {
       "maxDuration": 20
+    },
+    "api/session-lookup.js": {
+      "maxDuration": 15
     }
   },
   "headers": [

@@ -381,6 +381,143 @@ Secure administrative interface for managing ACC Shark Tank event submissions
             height: 24px;
             fill: white;
         }
+
+        /* Session Search Styles */
+        .session-search-form {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .search-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr auto;
+            gap: 20px;
+            align-items: end;
+        }
+
+        .search-field label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .search-field input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .search-field input:focus {
+            outline: none;
+            border-color: #003366;
+            box-shadow: 0 0 0 2px rgba(0, 51, 102, 0.1);
+        }
+
+        .sessions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .sessions-table th,
+        .sessions-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+
+        .sessions-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9rem;
+        }
+
+        .sessions-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        .session-details {
+            background: #f8f6fc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 10px;
+            border-left: 4px solid #2E1A47;
+        }
+
+        .session-details h4 {
+            color: #2E1A47;
+            margin-bottom: 10px;
+        }
+
+        .session-details p {
+            margin: 5px 0;
+            color: #666;
+        }
+
+        .session-content {
+            background: white;
+            border-radius: 6px;
+            padding: 12px;
+            margin-top: 10px;
+            border: 1px solid #e0e0e0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .session-content pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: inherit;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .view-session-btn {
+            background: #2E1A47;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.3s ease;
+        }
+
+        .view-session-btn:hover {
+            background: #3D2558;
+        }
+
+        .session-id-badge {
+            background: #e8f4f8;
+            color: #2E1A47;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        @media (max-width: 768px) {
+            .search-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+            
+            .sessions-table {
+                font-size: 14px;
+            }
+            
+            .sessions-table th,
+            .sessions-table td {
+                padding: 8px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -507,6 +644,43 @@ Secure administrative interface for managing ACC Shark Tank event submissions
                         <!-- Data will be populated by JavaScript -->
                     </tbody>
                 </table>
+            </div>
+        </div>
+
+        <!-- AI Coaching Session Lookup -->
+        <div class="content-section">
+            <div class="section-header">
+                <h2 class="section-title">AI Coaching Session Lookup</h2>
+                <button class="btn btn-primary" onclick="clearSessionSearch()">Clear Search</button>
+            </div>
+
+            <div class="session-search-form">
+                <div class="search-grid">
+                    <div class="search-field">
+                        <label for="sessionIdSearch">Session ID</label>
+                        <input type="text" id="sessionIdSearch" placeholder="Enter session ID">
+                    </div>
+                    <div class="search-field">
+                        <label for="emailSearch">Student Email</label>
+                        <input type="email" id="emailSearch" placeholder="Enter student email">
+                    </div>
+                    <div class="search-field">
+                        <label for="nameSearch">Student Name</label>
+                        <input type="text" id="nameSearch" placeholder="Enter student name">
+                    </div>
+                    <div class="search-field">
+                        <button class="btn btn-primary" onclick="searchSessions()">Search Sessions</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="loading" id="sessionsLoading">
+                <div class="spinner"></div>
+                <p>Loading sessions...</p>
+            </div>
+
+            <div id="sessionsContent" style="display: none;">
+                <div id="sessionsResults"></div>
             </div>
         </div>
     </div>
@@ -887,6 +1061,258 @@ Submitted: ${formatDate(submission.timestamp)}`);
                 console.error('Logout error:', error);
                 showAlert('Network error during logout', 'error');
             }
+        }
+
+        /* ****************************************
+         * Session lookup functions
+         ****************************************/
+        
+        // Search for AI coaching sessions
+        async function searchSessions() {
+            const sessionId = document.getElementById('sessionIdSearch').value.trim();
+            const email = document.getElementById('emailSearch').value.trim();
+            const name = document.getElementById('nameSearch').value.trim();
+            
+            if (!sessionId && !email && !name) {
+                showAlert('Please enter at least one search criteria', 'error');
+                return;
+            }
+            
+            const loadingElement = document.getElementById('sessionsLoading');
+            const contentElement = document.getElementById('sessionsContent');
+            
+            loadingElement.classList.add('active');
+            contentElement.style.display = 'none';
+            
+            try {
+                const params = new URLSearchParams();
+                if (sessionId) params.append('sessionId', sessionId);
+                if (email) params.append('email', email);
+                if (name) params.append('name', name);
+                
+                const response = await fetch(`/api/session-lookup?${params}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displaySessionResults(data);
+                } else {
+                    throw new Error(data.error || 'Failed to search sessions');
+                }
+                
+            } catch (error) {
+                console.error('Session search error:', error);
+                showAlert('Failed to search sessions: ' + error.message, 'error');
+            } finally {
+                loadingElement.classList.remove('active');
+                contentElement.style.display = 'block';
+            }
+        }
+        
+        // Display session search results
+        function displaySessionResults(data) {
+            const resultsContainer = document.getElementById('sessionsResults');
+            
+            if (!data.sessions || data.sessions.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: #666;">
+                        <p>No sessions found matching your criteria.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const sessionsHtml = `
+                <div style="margin-bottom: 15px;">
+                    <strong>Found ${data.total} session(s)</strong>
+                </div>
+                <table class="sessions-table">
+                    <thead>
+                        <tr>
+                            <th>Session ID</th>
+                            <th>Student</th>
+                            <th>Email</th>
+                            <th>Business Idea</th>
+                            <th>Date</th>
+                            <th>AI Generated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${data.sessions.map(session => `
+                            <tr>
+                                <td><span class="session-id-badge">${DOMPurify.sanitize(session.sessionId)}</span></td>
+                                <td>${DOMPurify.sanitize(session.studentName)}</td>
+                                <td>${DOMPurify.sanitize(session.studentEmail)}</td>
+                                <td>${DOMPurify.sanitize(session.businessIdea.substring(0, 50))}${session.businessIdea.length > 50 ? '...' : ''}</td>
+                                <td>${session.formattedTimestamp}</td>
+                                <td>${session.aiGenerated === 'Yes' ? 'Yes' : 'No'}</td>
+                                <td>
+                                    <button class="view-session-btn" onclick="viewSessionDetails('${session.sessionId}')">
+                                        View Details
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            resultsContainer.innerHTML = sessionsHtml;
+        }
+        
+        // View detailed session information
+        async function viewSessionDetails(sessionId) {
+            try {
+                const response = await fetch(`/api/session-lookup?sessionId=${encodeURIComponent(sessionId)}`);
+                const data = await response.json();
+                
+                if (response.ok && data.sessions && data.sessions.length > 0) {
+                    const session = data.sessions[0];
+                    showSessionDetailsModal(session);
+                } else {
+                    showAlert('Session not found', 'error');
+                }
+            } catch (error) {
+                console.error('Error fetching session details:', error);
+                showAlert('Failed to load session details', 'error');
+            }
+        }
+        
+        // Show session details in a modal-like display
+        function showSessionDetailsModal(session) {
+            const modal = document.createElement('div');
+            modal.className = 'session-modal';
+            modal.innerHTML = `
+                <div class="session-modal-content">
+                    <div class="session-modal-header">
+                        <h3>AI Coaching Session Details</h3>
+                        <button class="close-modal" onclick="closeSessionModal()">&times;</button>
+                    </div>
+                    <div class="session-modal-body">
+                        <div class="session-details">
+                            <h4>Session Information</h4>
+                            <p><strong>Session ID:</strong> ${DOMPurify.sanitize(session.sessionId)}</p>
+                            <p><strong>Student:</strong> ${DOMPurify.sanitize(session.studentName)}</p>
+                            <p><strong>Email:</strong> ${DOMPurify.sanitize(session.studentEmail)}</p>
+                            <p><strong>Major:</strong> ${DOMPurify.sanitize(session.studentMajor)}</p>
+                            <p><strong>Date:</strong> ${session.formattedTimestamp}</p>
+                            <p><strong>AI Generated:</strong> ${session.aiGenerated === 'Yes' ? 'Yes' : 'No'}</p>
+                        </div>
+                        
+                        <div class="session-details">
+                            <h4>Business Details</h4>
+                            <p><strong>Business Idea:</strong></p>
+                            <div class="session-content">
+                                <pre>${DOMPurify.sanitize(session.businessIdea)}</pre>
+                            </div>
+                            
+                            ${session.problemDescription ? `
+                                <p><strong>Problem Description:</strong></p>
+                                <div class="session-content">
+                                    <pre>${DOMPurify.sanitize(session.problemDescription)}</pre>
+                                </div>
+                            ` : ''}
+                            
+                            ${session.solutionDescription ? `
+                                <p><strong>Solution Description:</strong></p>
+                                <div class="session-content">
+                                    <pre>${DOMPurify.sanitize(session.solutionDescription)}</pre>
+                                </div>
+                            ` : ''}
+                            
+                            ${session.fundingNeeds ? `
+                                <p><strong>Funding Needs:</strong></p>
+                                <div class="session-content">
+                                    <pre>${DOMPurify.sanitize(session.fundingNeeds)}</pre>
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        ${session.generatedContent && Object.keys(session.generatedContent).length > 0 ? `
+                            <div class="session-details">
+                                <h4>Generated Coaching Content</h4>
+                                ${Object.entries(session.generatedContent).map(([key, value]) => `
+                                    <p><strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong></p>
+                                    <div class="session-content">
+                                        <pre>${DOMPurify.sanitize(value)}</pre>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+            `;
+            
+            // Add modal styles
+            const style = document.createElement('style');
+            style.textContent = `
+                .session-modal {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.5);
+                    z-index: 1000;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                .session-modal-content {
+                    background: white;
+                    border-radius: 12px;
+                    max-width: 900px;
+                    width: 90%;
+                    max-height: 90%;
+                    overflow-y: auto;
+                }
+                
+                .session-modal-header {
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    padding: 20px;
+                    border-bottom: 1px solid #eee;
+                }
+                
+                .session-modal-header h3 {
+                    margin: 0;
+                    color: #2E1A47;
+                }
+                
+                .close-modal {
+                    background: none;
+                    border: none;
+                    font-size: 24px;
+                    cursor: pointer;
+                    color: #666;
+                }
+                
+                .session-modal-body {
+                    padding: 20px;
+                }
+            `;
+            
+            document.head.appendChild(style);
+            document.body.appendChild(modal);
+        }
+        
+        // Close session details modal
+        function closeSessionModal() {
+            const modal = document.querySelector('.session-modal');
+            if (modal) {
+                modal.remove();
+            }
+        }
+        
+        // Clear session search form
+        function clearSessionSearch() {
+            document.getElementById('sessionIdSearch').value = '';
+            document.getElementById('emailSearch').value = '';
+            document.getElementById('nameSearch').value = '';
+            document.getElementById('sessionsResults').innerHTML = '';
+            document.getElementById('sessionsContent').style.display = 'none';
         }
     </script>
 </body>
