@@ -22,6 +22,15 @@
     },
     "api/participate.js": {
       "maxDuration": 15
+    },
+    "api/ai-coaching.js": {
+      "maxDuration": 10
+    },
+    "api/usage-check.js": {
+      "maxDuration": 15
+    },
+    "api/test-claude.js": {
+      "maxDuration": 20
     }
   },
   "headers": [
@@ -46,7 +55,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.anthropic.com; frame-ancestors 'none';"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.anthropic.com; frame-ancestors 'none';"
         }
       ]
     },
@@ -107,6 +116,10 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=300"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-eval' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.anthropic.com; frame-ancestors 'none';"
         }
       ]
     },
